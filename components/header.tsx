@@ -14,6 +14,7 @@ export function Header() {
   const [showSubHeader, setShowSubHeader] = useState(false);
   const [subHeaderAnimated, setSubHeaderAnimated] = useState(false);
   const [isReglementDropdownOpen, setIsReglementDropdownOpen] = useState(false);
+  const [isDossierDropdownOpen, setIsDossierDropdownOpen] = useState(false);
   const subHeaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function Header() {
 
   useEffect(() => {
     setIsReglementDropdownOpen(false);
+    setIsDossierDropdownOpen(false);
     setIsMenuOpen(false);
   }, [pathname]);
 
@@ -161,6 +163,49 @@ export function Header() {
               >
                 <span>Whitelist</span>
               </Link>
+
+              {/* Dépôt de dossier Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setIsDossierDropdownOpen(!isDossierDropdownOpen)
+                  }
+                  className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                >
+                  <span>Dépôt de dossier</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ${isDossierDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {isDossierDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-72 bg-neutral-900/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm z-50">
+                    <div className="py-2">
+                      <Link
+                        href="/depot-dossier/legal"
+                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        onClick={() => setIsDossierDropdownOpen(false)}
+                      >
+                        Dépôt de dossier légal
+                      </Link>
+                      <Link
+                        href="/depot-dossier/illegal"
+                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        onClick={() => setIsDossierDropdownOpen(false)}
+                      >
+                        Dépôt de dossier illégal
+                      </Link>
+                      <Link
+                        href="/depot-dossier/staff"
+                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        onClick={() => setIsDossierDropdownOpen(false)}
+                      >
+                        Devenir staff
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             </nav>
 
             <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
@@ -226,6 +271,36 @@ export function Header() {
             >
               <span>Boutique</span>
             </Link>
+
+            {/* Dépôt de dossier Mobile */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-4 text-white/60 text-lg font-light p-3">
+                <span>Dépôt de dossier</span>
+              </div>
+              <div className="ml-4 space-y-2">
+                <Link
+                  href="/depot-dossier/legal"
+                  className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dépôt de dossier légal
+                </Link>
+                <Link
+                  href="/depot-dossier/illegal"
+                  className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dépôt de dossier illégal
+                </Link>
+                <Link
+                  href="/depot-dossier/staff"
+                  className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Devenir staff
+                </Link>
+              </div>
+            </div>
 
             {/* Règlement Mobile */}
             <div className="space-y-2">

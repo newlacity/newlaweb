@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Shield,
   CheckCircle,
@@ -345,6 +345,7 @@ export default function WhitelistPage() {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30); // 30 secondes par question
   const [whitelistStatus, setWhitelistStatus] = useState<string | null>(null);
+  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est connecté
@@ -439,6 +440,7 @@ export default function WhitelistPage() {
   };
 
   const startQuiz = () => {
+    hasSubmittedRef.current = false;
     setQuizStarted(true);
     setCurrentQuestion(0);
     setAnswers(new Array(quizQuestions.length).fill(-1));
@@ -466,6 +468,10 @@ export default function WhitelistPage() {
   };
 
   const submitQuiz = async () => {
+    // Empêche les doubles soumissions (auto-submit + clic utilisateur)
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
     const correctAnswers = answers.filter(
       (answer, index) => answer === quizQuestions[index].correct,
     ).length;

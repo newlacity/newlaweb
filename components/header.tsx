@@ -57,7 +57,7 @@ export function Header() {
           </Link>
           <Link
             href="https://discord.gg/newlacity"
-            className="bg-[#022b59] text-black font-semibold px-4 py-2 rounded-full shadow hover:bg-[#022b59] transition-colors"
+            className="bg-white text-black font-semibold px-4 py-2 rounded-full shadow hover:bg-neutral-200 transition-colors"
           >
             Se connecter
           </Link>
@@ -83,19 +83,19 @@ export function Header() {
             <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
               <Link
                 href="/blog"
-                className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
               >
                 <span>Guide</span>
               </Link>
               <Link
                 href="/catalogue"
-                className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
               >
                 <span>Catalogue</span>
               </Link>
               <Link
                 href="/boutique"
-                className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
               >
                 <span>Boutique</span>
               </Link>
@@ -106,7 +106,7 @@ export function Header() {
                   onClick={() =>
                     setIsReglementDropdownOpen(!isReglementDropdownOpen)
                   }
-                  className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                  className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
                   <span>Règlement</span>
                   <ChevronDown
@@ -159,7 +159,7 @@ export function Header() {
 
               <Link
                 href="/whitelist"
-                className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
               >
                 <span>Whitelist</span>
               </Link>
@@ -170,7 +170,7 @@ export function Header() {
                   onClick={() =>
                     setIsDossierDropdownOpen(!isDossierDropdownOpen)
                   }
-                  className="text-white/80 hover:text-[#022b59] transition-colors duration-300 flex items-center space-x-2"
+                  className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
                   <span>Dépôt de dossier</span>
                   <ChevronDown
@@ -213,7 +213,7 @@ export function Header() {
                 <a href="https://discord.gg/newlacity" className="relative z-10">
                   Se connecter
                 </a>
-                <div className="absolute inset-0 bg-[#022b59] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                <div className="absolute inset-0 bg-neutral-200 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
               </button>
             </div>
 

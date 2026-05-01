@@ -18,19 +18,29 @@ async function sendQuizWebhook(params: {
     discriminator?: string
   }
   score: number
+  totalAttempts: number
+  attemptedAt: string
 }) {
-  const { webhookUrl, passed, user, score } = params
+  const { webhookUrl, passed, user, score, totalAttempts, attemptedAt } = params
   if (!webhookUrl) return
 
   const maxScore = 40
   const statusLabel = passed ? 'QUIZ REUSSI' : 'QUIZ RATE'
   const color = passed ? 0x22c55e : 0xef4444
+  const attemptedAtLabel = new Date(attemptedAt).toLocaleString('fr-FR', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  })
   const discriminator =
     user.discriminator && user.discriminator !== '0'
       ? `#${user.discriminator}`
       : ''
 
   const payload = {
+    content: `<@${user.id}>`,
+    allowed_mentions: {
+      users: [user.id],
+    },
     embeds: [
       {
         title: statusLabel,
@@ -50,6 +60,16 @@ async function sendQuizWebhook(params: {
           {
             name: 'Score',
             value: `${score}/${maxScore}`,
+            inline: true,
+          },
+          {
+            name: 'Nombre de tentatives',
+            value: `${totalAttempts}`,
+            inline: true,
+          },
+          {
+            name: 'Date et heure',
+            value: attemptedAtLabel,
             inline: true,
           },
         ],
@@ -127,11 +147,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Récupère les stats à jour pour enrichir le webhook.
+    const updatedStatus = await whitelistService.checkStatus(user.id)
+
     await sendQuizWebhook({
       webhookUrl: passed ? QUIZ_SUCCESS_WEBHOOK_URL : QUIZ_FAILED_WEBHOOK_URL,
       passed,
       user,
       score,
+      totalAttempts: updatedStatus.totalAttempts || 1,
+      attemptedAt: entry.created_at,
     })
 
     return NextResponse.json({ 

@@ -103,9 +103,10 @@ export function Header() {
               {/* Règlement Dropdown */}
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setIsReglementDropdownOpen(!isReglementDropdownOpen)
-                  }
+                  onClick={() => {
+                    setIsReglementDropdownOpen(!isReglementDropdownOpen);
+                    setIsDossierDropdownOpen(false);
+                  }}
                   className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
                   <span>Règlement</span>
@@ -119,35 +120,35 @@ export function Header() {
                     <div className="py-2">
                       <Link
                         href="/reglement-general"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsReglementDropdownOpen(false)}
                       >
                         Règlement Général
                       </Link>
                       <Link
                         href="/reglement-illegal"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsReglementDropdownOpen(false)}
                       >
                         Règlement Illégal
                       </Link>
                       <Link
                         href="/reglement-societes"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsReglementDropdownOpen(false)}
                       >
                         Règlement Sociétés
                       </Link>
                       <Link
                         href="/reglement-streamer"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsReglementDropdownOpen(false)}
                       >
                         Règlement Streamer
                       </Link>
                       <Link
                         href="/reglement-faction"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsReglementDropdownOpen(false)}
                       >
                         Règlement Faction
@@ -167,9 +168,10 @@ export function Header() {
               {/* Dépôt de dossier Dropdown */}
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setIsDossierDropdownOpen(!isDossierDropdownOpen)
-                  }
+                  onClick={() => {
+                    setIsDossierDropdownOpen(!isDossierDropdownOpen);
+                    setIsReglementDropdownOpen(false);
+                  }}
                   className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
                   <span>Dépôt de dossier</span>
@@ -183,21 +185,21 @@ export function Header() {
                     <div className="py-2">
                       <Link
                         href="/depot-dossier/legal"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsDossierDropdownOpen(false)}
                       >
                         Dépôt de dossier légal
                       </Link>
                       <Link
                         href="/depot-dossier/illegal"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsDossierDropdownOpen(false)}
                       >
                         Dépôt de dossier illégal
                       </Link>
                       <Link
                         href="/depot-dossier/staff"
-                        className="block px-4 py-2 text-white/80 hover:text-[#022b59] hover:bg-white/5 transition-colors duration-300"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsDossierDropdownOpen(false)}
                       >
                         Devenir staff

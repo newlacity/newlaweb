@@ -7,7 +7,7 @@ import { DiscordSection } from "@/components/discord-section"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-[#022b59]/35 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-900 overflow-x-hidden">
       <main>
         <HeroSection />
         <ServerSection />

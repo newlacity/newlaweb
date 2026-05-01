@@ -50,7 +50,7 @@ export function ExperienceSection() {
           <h2 className="text-5xl md:text-6xl font-extralight text-white mb-6 tracking-tight">
             Conçu pour
             <br />
-            <span className="text-[#022b59]">l'excellence</span>
+            <span className="text-white">l'excellence</span>
           </h2>
         </div>
 
@@ -60,16 +60,16 @@ export function ExperienceSection() {
               key={index}
               className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-500"
             >
-              <div className="absolute top-6 right-6 text-4xl font-extralight text-white/10 group-hover:text-[#022b59]/20 transition-colors duration-500">
+              <div className="absolute top-6 right-6 text-4xl font-extralight text-white/10 group-hover:text-white/20 transition-colors duration-500">
                 {feature.icon}
               </div>
 
-              <h3 className="text-xl font-light text-white mb-4 group-hover:text-[#022b59] transition-colors duration-300">
+              <h3 className="text-xl font-light text-white mb-4 group-hover:text-white transition-colors duration-300">
                 {feature.title}
               </h3>
               <p className="text-white/60 font-light leading-relaxed">{feature.description}</p>
 
-              <div className="mt-6 w-12 h-px bg-white/20 group-hover:w-24 group-hover:bg-[#022b59] transition-all duration-500"></div>
+              <div className="mt-6 w-12 h-px bg-white/20 group-hover:w-24 group-hover:bg-white transition-all duration-500"></div>
             </div>
           ))}
         </div>
@@ -77,7 +77,7 @@ export function ExperienceSection() {
         {/* Call to action */}
         <div className="text-center mt-20">
           <div className="inline-flex items-center space-x-8">
-            <button onClick={handleDiscordLogin} className="group relative overflow-hidden bg-[#022b59] text-black px-12 py-4 rounded-full text-sm font-medium transition-all duration-500 hover:scale-105">
+            <button onClick={handleDiscordLogin} className="group relative overflow-hidden bg-white text-black px-12 py-4 rounded-full text-sm font-medium transition-all duration-500 hover:scale-105">
               <span className="relative z-10">Commencer</span>
             </button>
           </div>

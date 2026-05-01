@@ -67,7 +67,7 @@ export function HeroSection() {
             />
           </div>
           <div className="space-y-4 mb-12">
-            <p className="text-2xl md:text-3xl font-extralight text-white/80 tracking-wide">Découvrez une nouvelle vision de <span className="text-[#022b59] font-medium">Los Angeles</span></p>
+            <p className="text-2xl md:text-3xl font-extralight text-white/80 tracking-wide">Découvrez une nouvelle vision de <span className="text-white font-medium">Los Angeles</span></p>
             <p className="text-lg text-white/50 font-light max-w-2xl mx-auto leading-relaxed">
               Une ville où les rêves se réalisent, où les gens se rencontrent et où les opportunités sont innombrables.
             </p>
@@ -77,7 +77,7 @@ export function HeroSection() {
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <button onClick={handleDiscordLogin} className="group relative overflow-hidden bg-white text-black px-12 py-4 rounded-full text-sm font-medium transition-all duration-500 hover:scale-105">
             <a href="https://discord.gg/newlawl" className="relative z-10 group-hover:text-white transition-colors duration-300">Rejoindre</a>
-            <div className="absolute inset-0 bg-[#022b59] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+            <div className="absolute inset-0 bg-neutral-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
           </button>
 
           <button className="group flex items-center space-x-2 text-white/60 hover:text-white transition-all duration-300">

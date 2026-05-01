@@ -414,7 +414,7 @@ export default function WhitelistPage() {
       <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
         <div className="max-w-md mx-auto px-6 py-12">
           <div className="text-center">
-            <Shield className="w-16 h-16 text-[#022b59] mx-auto mb-6" />
+            <Shield className="w-16 h-16 text-white mx-auto mb-6" />
             <h1 className="text-3xl font-bold text-white mb-4">
               Accès Whitelist
             </h1>
@@ -455,7 +455,7 @@ export default function WhitelistPage() {
           <div className="space-y-3">
             <button
               onClick={() => window.location.href = 'https://discord.gg/newlawl'}
-              className="w-full bg-[#022b59] text-black py-3 px-6 rounded-lg font-medium hover:bg-[#022b59] transition-colors duration-300"
+              className="w-full bg-white text-black py-3 px-6 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300"
             >
               Rejoindre le Discord
             </button>
@@ -512,12 +512,12 @@ export default function WhitelistPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
         <div className="max-w-md mx-auto px-6 py-12 text-center">
-          <Trophy className="w-16 h-16 text-[#022b59] mx-auto mb-6" />
+          <Trophy className="w-16 h-16 text-white mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-white mb-4">
             Quiz Terminé !
           </h1>
                      <p className="text-white/70 mb-6">
-             Votre score : <span className="text-[#022b59] font-bold">{score}/40</span>
+             Votre score : <span className="text-white font-bold">{score}/40</span>
            </p>
                      {score >= 30 ? (
             <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
@@ -563,7 +563,7 @@ export default function WhitelistPage() {
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <User className="w-5 h-5 text-[#022b59]" />
+                <User className="w-5 h-5 text-white" />
                 <span className="text-white font-medium">{user?.username}</span>
               </div>
               <div className="flex items-center gap-3">
@@ -573,7 +573,7 @@ export default function WhitelistPage() {
             </div>
             <div className="w-full bg-white/10 rounded-full h-2">
               <div 
-                className="bg-[#022b59] h-2 rounded-full transition-all duration-300"
+                className="bg-white h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -595,7 +595,7 @@ export default function WhitelistPage() {
                   onClick={() => handleAnswer(index)}
                   className={`w-full text-left p-4 rounded-lg border transition-all duration-300 ${
                     answers[currentQuestion] === index
-                      ? "bg-[#022b59]/20 border-[#022b59] text-[#022b59]"
+                      ? "bg-white/20 border-white text-white"
                       : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20"
                   }`}
                 >
@@ -617,7 +617,7 @@ export default function WhitelistPage() {
             <button
               onClick={nextQuestion}
               disabled={answers[currentQuestion] === -1}
-              className="px-6 py-3 bg-[#022b59] text-black rounded-lg hover:bg-[#022b59] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-white text-black rounded-lg hover:bg-white/90 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {currentQuestion === quizQuestions.length - 1 ? "Terminer" : "Suivant"}
             </button>
@@ -631,7 +631,7 @@ export default function WhitelistPage() {
     <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-[#022b59] mx-auto mb-6" />
+          <Shield className="w-16 h-16 text-white mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-white mb-4">
             Quiz RP - Accès Whitelist
           </h1>
@@ -643,19 +643,19 @@ export default function WhitelistPage() {
             <h3 className="text-xl font-bold text-white mb-4">Informations du quiz</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                              <div className="flex items-center gap-3">
-                 <Clock className="w-5 h-5 text-[#022b59]" />
+                 <Clock className="w-5 h-5 text-white" />
                  <span className="text-white/70">Durée : 30 secondes par question</span>
                </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-[#022b59]" />
+                <CheckCircle className="w-5 h-5 text-white" />
                 <span className="text-white/70">Score minimum : 35/20</span>
               </div>
               <div className="flex items-center gap-3">
-                <User className="w-5 h-5 text-[#022b59]" />
+                <User className="w-5 h-5 text-white" />
                 <span className="text-white/70">Questions : 40</span>
               </div>
               <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-[#022b59]" />
+                <Trophy className="w-5 h-5 text-white" />
                 <span className="text-white/70">Récompense : Rôle Discord</span>
               </div>
             </div>
@@ -664,7 +664,7 @@ export default function WhitelistPage() {
           <div className="space-y-4">
             <button
               onClick={startQuiz}
-              className="w-full bg-[#022b59] text-black py-4 px-8 rounded-lg font-medium hover:bg-[#022b59] transition-colors duration-300 text-lg"
+              className="w-full bg-white text-black py-4 px-8 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300 text-lg"
             >
               Commencer le Quiz
             </button>

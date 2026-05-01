@@ -94,7 +94,7 @@ export default function JoinPage() {
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-[#022b59] hover:text-[#022b59] transition-colors duration-300 mb-8"
+            className="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors duration-300 mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour à l'accueil
@@ -114,7 +114,7 @@ export default function JoinPage() {
                 const Icon = stat.icon
                 return (
                   <div key={index} className="text-center">
-                    <Icon className="w-8 h-8 text-[#022b59] mx-auto mb-2" />
+                    <Icon className="w-8 h-8 text-white mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{stat.value}</div>
                     <div className="text-white/60 text-sm">{stat.label}</div>
                   </div>
@@ -140,7 +140,7 @@ export default function JoinPage() {
                 className={`bg-gradient-to-br ${feature.color} backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/5 transition-all duration-300 group`}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Icon className="w-8 h-8 text-[#022b59]" />
+                  <Icon className="w-8 h-8 text-white" />
                   <h3 className="text-xl font-bold text-white">{feature.title}</h3>
                 </div>
                 <p className="text-white/70 leading-relaxed">
@@ -168,13 +168,13 @@ export default function JoinPage() {
               >
                 <div className="flex items-start gap-4 mb-6">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-[#022b59] rounded-full flex items-center justify-center text-black font-bold text-lg">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black font-bold text-lg">
                       {step.step}
                     </div>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <Icon className="w-6 h-6 text-[#022b59]" />
+                      <Icon className="w-6 h-6 text-white" />
                       <h3 className="text-xl font-bold text-white">{step.title}</h3>
                     </div>
                     <p className="text-white/70 leading-relaxed mb-4">
@@ -182,7 +182,7 @@ export default function JoinPage() {
                     </p>
                     <Link
                       href={step.href}
-                      className="inline-flex items-center gap-2 bg-[#022b59] text-black px-4 py-2 rounded-lg font-medium hover:bg-[#022b59] transition-colors duration-300 text-sm"
+                      className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300 text-sm"
                     >
                       {step.action}
                     </Link>
@@ -202,7 +202,7 @@ export default function JoinPage() {
         
         <div className="grid grid-cols-1 gap-8">
           {/* Los Angeles */}
-          <div className="bg-gradient-to-br from-[#022b59]/10 to-pink-600/10 border border-[#022b59]/20 rounded-2xl p-8 max-w-3xl mx-auto">
+          <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl p-8 max-w-3xl mx-auto">
             <h3 className="text-2xl font-bold text-white mb-4">Los Angeles</h3>
             <p className="text-white/70 mb-6 leading-relaxed">
               Le glamour et la rue. Plongez dans l'univers hollywoodien où le rêve américain 
@@ -211,21 +211,21 @@ export default function JoinPage() {
             </p>
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-2 text-white/80">
-                <Star className="w-4 h-4 text-[#022b59]" />
+                <Star className="w-4 h-4 text-white" />
                 <span>Industrie du cinéma</span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
-                <Star className="w-4 h-4 text-[#022b59]" />
+                <Star className="w-4 h-4 text-white" />
                 <span>Lifestyle californien</span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
-                <Star className="w-4 h-4 text-[#022b59]" />
+                <Star className="w-4 h-4 text-white" />
                 <span>Plages et outdoor</span>
               </div>
             </div>
             <Link
               href="/la-details"
-              className="inline-flex items-center gap-2 bg-[#022b59] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#022b59] transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300"
             >
               Découvrir LA
             </Link>
@@ -235,7 +235,7 @@ export default function JoinPage() {
 
       {/* Final CTA */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-r from-[#022b59]/10 to-[#022b59]/10 border border-[#022b59]/20 rounded-2xl p-8 text-center">
+        <div className="bg-gradient-to-r from-white/10 to-white/10 border border-white/20 rounded-2xl p-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">
             Prêt à commencer votre aventure ?
           </h2>
@@ -246,7 +246,7 @@ export default function JoinPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/whitelist"
-              className="bg-[#022b59] text-black px-8 py-4 rounded-lg font-medium hover:bg-[#022b59] transition-colors duration-300"
+              className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300"
             >
               Demander l'accès maintenant
             </Link>

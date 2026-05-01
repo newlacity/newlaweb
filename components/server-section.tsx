@@ -146,7 +146,7 @@ export function ServerSection() {
           <h2 className="text-5xl md:text-6xl font-extralight text-white mb-6 tracking-tight">
             Los Angeles,
             <br />
-            <span className="text-[#022b59] font-medium">Un univers.</span>
+            <span className="text-white font-medium">Un univers.</span>
           </h2>
         </div>
         <div className="relative flex flex-row gap-8 min-h-[800px] items-center justify-center">
@@ -154,7 +154,7 @@ export function ServerSection() {
           <div className="relative h-full flex flex-col items-center justify-center mr-8">
             <div className="relative h-80 w-1 bg-white/10 rounded-full flex flex-col items-center">
               <div
-                className="absolute left-0 top-0 w-1 bg-[#022b59] rounded-full transition-all duration-500"
+                className="absolute left-0 top-0 w-1 bg-white rounded-full transition-all duration-500"
                 style={{ height: `${((activeStep + 1) / steps.length) * 100}%` }}
               ></div>
               {/* Steps markers */}
@@ -163,7 +163,7 @@ export function ServerSection() {
                   key={i}
                   className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 ${
                     i <= activeStep
-                      ? "bg-[#022b59] border-[#022b59]"
+                      ? "bg-white border-white"
                       : "bg-white/10 border-white/30"
                   }`}
                   style={{ top: `${(i / (steps.length - 1)) * 100}%`, transform: "translate(-50%, -50%)" }}
@@ -194,8 +194,8 @@ export function ServerSection() {
                   href={step.link.href}
                   className={`font-medium transition-colors ${
                     i === activeStep
-                      ? "text-[#022b59] hover:text-[#022b59]/80"
-                      : "text-[#022b59]/60 pointer-events-none"
+                      ? "text-white hover:text-white/80"
+                      : "text-white/50 pointer-events-none"
                   }`}
                 >
                   {step.link.label}

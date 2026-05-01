@@ -40,7 +40,7 @@ export function ExperienceSection() {
   ]
 
   const handleDiscordLogin = () => {
-    window.location.href = "https://discord.gg/newlawl"
+    window.location.href = "https://discord.gg/newlacity"
   }
 
     return (

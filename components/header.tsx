@@ -54,7 +54,7 @@ export function Header() {
             <img src="/logo.png" alt="Logo" className="w-10 h-10" />
           </Link>
           <Link
-            href="https://discord.gg/newlawl"
+            href="https://discord.gg/newlacity"
             className="bg-[#022b59] text-black font-semibold px-4 py-2 rounded-full shadow hover:bg-[#022b59] transition-colors"
           >
             Se connecter
@@ -165,7 +165,7 @@ export function Header() {
 
             <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
               <button className="group relative overflow-hidden bg-white text-black px-4 lg:px-6 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium transition-all duration-300 hover:scale-105">
-                <a href="https://discord.gg/newlawl" className="relative z-10">
+                <a href="https://discord.gg/newlacity" className="relative z-10">
                   Se connecter
                 </a>
                 <div className="absolute inset-0 bg-[#022b59] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>

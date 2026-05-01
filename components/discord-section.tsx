@@ -11,7 +11,7 @@ export function DiscordSection() {
       title: "Rejoignez la communauté Discord",
       desc:
         "Accédez à toutes les annonces, événements et discussions exclusives. Notre Discord est le cœur vivant de la communauté.",
-      link: { href: "https://discord.gg/newlawl", label: "Rejoindre le Discord →" },
+      link: { href: "https://discord.gg/newlacity", label: "Rejoindre le Discord →" },
     },
     {
       value: "support",
@@ -19,7 +19,7 @@ export function DiscordSection() {
       title: "Support & entraide 24/7",
       desc:
         "Posez vos questions, trouvez de l'aide rapidement grâce à notre staff et à la solidarité des membres. Un problème ? On est là pour vous !",
-      link: { href: "https://discord.gg/newlawl", label: "Obtenir de l'aide →" },
+      link: { href: "https://discord.gg/newlacity", label: "Obtenir de l'aide →" },
     },
     {
       value: "evenements",
@@ -27,7 +27,7 @@ export function DiscordSection() {
       title: "Événements et giveaways",
       desc:
         "Participez à des événements exclusifs, gagnez des récompenses et vivez des moments inoubliables avec la communauté.",
-      link: { href: "https://discord.gg/newlawl", label: "Voir les événements →" },
+      link: { href: "https://discord.gg/newlacity", label: "Voir les événements →" },
     },
   ];
 

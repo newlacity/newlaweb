@@ -454,7 +454,7 @@ export default function WhitelistPage() {
           </div>
           <div className="space-y-3">
             <button
-              onClick={() => window.location.href = 'https://discord.gg/newlawl'}
+              onClick={() => window.location.href = 'https://discord.gg/newlacity'}
               className="w-full bg-white text-black py-3 px-6 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300"
             >
               Rejoindre le Discord

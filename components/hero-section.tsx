@@ -24,7 +24,7 @@ export function HeroSection() {
   }, [])
 
   const handleDiscordLogin = () => {
-    window.location.href = "https://discord.gg/newlawl"
+    window.location.href = "https://discord.gg/newlacity"
   }
 
   return (
@@ -76,7 +76,7 @@ export function HeroSection() {
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <button onClick={handleDiscordLogin} className="group relative overflow-hidden bg-white text-black px-12 py-4 rounded-full text-sm font-medium transition-all duration-500 hover:scale-105">
-            <a href="https://discord.gg/newlawl" className="relative z-10 group-hover:text-white transition-colors duration-300">Rejoindre</a>
+            <a href="https://discord.gg/newlacity" className="relative z-10 group-hover:text-white transition-colors duration-300">Rejoindre</a>
             <div className="absolute inset-0 bg-neutral-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
           </button>
 

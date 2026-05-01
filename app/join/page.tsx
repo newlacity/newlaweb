@@ -57,7 +57,7 @@ const steps = [
     title: "Rejoindre Discord",
     description: "Intégrez notre communauté Discord pour rester connecté",
     action: "Rejoindre Discord",
-    href: "https://discord.gg/newlawl",
+    href: "https://discord.gg/newlacity",
     icon: Users
   },
   {
@@ -251,7 +251,7 @@ export default function JoinPage() {
               Demander l'accès maintenant
             </Link>
             <Link
-              href="https://discord.gg/newlawl"
+              href="https://discord.gg/newlacity"
               className="bg-[#5865F2] text-white px-8 py-4 rounded-lg font-medium hover:bg-[#4752C4] transition-colors duration-300"
             >
               Rejoindre Discord

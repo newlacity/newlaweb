@@ -23,7 +23,7 @@ export function Footer() {
             {/* Social Links */}
             <div className="flex space-x-4">
               {[
-                { icon: faDiscord, href: "https://discord.gg/newlawl", label: "Discord" },
+                { icon: faDiscord, href: "https://discord.gg/newlacity", label: "Discord" },
                 { icon: faTiktok, href: "#", label: "Community" },
                 { icon: faYoutube, href: "#", label: "Contact" },
               ].map((social, index) => (
@@ -67,9 +67,9 @@ export function Footer() {
             <h3 className="text-white font-medium text-lg mb-6 tracking-tight">Communauté</h3>
             <ul className="space-y-4">
               {[
-                { href: "https://discord.gg/newlawl", label: "Discord" },
-                { href: "https://discord.gg/newlawl", label: "Support" },
-                { href: "https://discord.gg/newlawl", label: "Candidatures Staff" },
+                { href: "https://discord.gg/newlacity", label: "Discord" },
+                { href: "https://discord.gg/newlacity", label: "Support" },
+                { href: "https://discord.gg/newlacity", label: "Candidatures Staff" },
                 { href: "https://boutique.newlacity.fr", label: "Boutique" },
               ].map((link, index) => (
                 <li key={index}>

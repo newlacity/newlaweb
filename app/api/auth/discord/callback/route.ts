@@ -51,20 +51,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/whitelist?error=user_error', request.url))
     }
 
-    // Créer une session pour l'utilisateur
-    const response = NextResponse.redirect(new URL('/whitelist', request.url))
-    response.cookies.set('discord_user', JSON.stringify({
-      id: userData.id,
-      username: userData.username,
-      avatar: userData.avatar,
-      discriminator: userData.discriminator
-    }), { 
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 jours
-    })
-
     // Ajouter un script pour fermer la fenêtre et rafraîchir la page parente
     const html = `
       <!DOCTYPE html>
@@ -85,14 +71,37 @@ export async function GET(request: NextRequest) {
         </body>
       </html>
     `
-    
-    return new Response(html, {
+
+    // Créer la réponse HTML et y attacher les cookies directement.
+    // C'est plus fiable que recopier manuellement l'en-tête Set-Cookie.
+    const response = new NextResponse(html, {
       status: 200,
       headers: {
         'Content-Type': 'text/html',
-        'Set-Cookie': response.headers.get('Set-Cookie') || ''
-      }
+      },
     })
+
+    response.cookies.set(
+      'discord_user',
+      JSON.stringify({
+        id: userData.id,
+        username: userData.username,
+        avatar: userData.avatar,
+        discriminator: userData.discriminator,
+      }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 jours
+        path: '/',
+      }
+    )
+
+    // Le state OAuth n'est plus nécessaire après succès.
+    response.cookies.delete('discord_state')
+
+    return response
 
   } catch (error) {
     console.error('Erreur callback Discord:', error)

@@ -18,19 +18,14 @@ function trimValue(raw: unknown): string {
   return `${s.slice(0, MAX_VALUE_LEN - 1)}…`;
 }
 
-/** Titre coloré (vert légal / rouge illégal) : Discord ne colore pas les `name`, seulement les `value` (bloc ansi). */
-function buildColoredTitleBlock(kind: DossierKind, questionTitle: string): string {
-  const ansiColor = kind === "legal" ? 32 : 31;
+/** Titre en blanc dans un bloc ansi (les noms de champs Discord ne peuvent pas être colorés). */
+function buildTitleBlock(questionTitle: string): string {
   const safe = questionTitle.replace(/```/g, "'''");
-  return `\`\`\`ansi\n\u001b[1;${ansiColor}m${safe}\u001b[0m\n\`\`\``;
+  return `\`\`\`ansi\n\u001b[1;37m${safe}\u001b[0m\n\`\`\``;
 }
 
-function buildFormFieldValue(
-  kind: DossierKind,
-  questionTitle: string,
-  answer: string,
-): string {
-  const header = buildColoredTitleBlock(kind, questionTitle);
+function buildFormFieldValue(questionTitle: string, answer: string): string {
+  const header = buildTitleBlock(questionTitle);
   const body = trimValue(answer);
   const sep = "\n";
   let out = `${header}${sep}${body}`;
@@ -138,10 +133,10 @@ export async function POST(request: NextRequest) {
       timeStyle: "short",
     });
 
-    const formTitle =
+    const embedTitle =
       kind === "legal"
-        ? "Dépôt de dossier — Légal"
-        : "Dépôt de dossier — Illégal";
+        ? "Dépôts de dossier : Légal"
+        : "Dépôts de dossier : Illégal";
 
     const headerFields = [
       {
@@ -157,16 +152,14 @@ export async function POST(request: NextRequest) {
     ];
 
     const embed = {
-      title: `Réponses · ${formTitle}`,
-      description:
-        "**Nouvelle réponse au formulaire**\n" +
-        `Horodatage : **${submittedFr}**`,
+      title: embedTitle,
+      description: `**Date** ${submittedFr}`,
       color: kind === "legal" ? 0x22c55e : 0xdc2626,
       fields: [
         ...headerFields,
         ...formRows.map((row) => ({
           name: "\u200b",
-          value: buildFormFieldValue(kind, row.name, row.value),
+          value: buildFormFieldValue(row.name, row.value),
           inline: false,
         })),
       ],

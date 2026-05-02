@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
     const embed = {
       title: `Réponses · ${formTitle}`,
       description:
+        `<@${user.id}>\n\n` +
         "**Nouvelle réponse au formulaire**\n" +
         `Horodatage : **${submittedFr}**\n\n` +
         "**Répondant**\n" +
@@ -136,7 +137,6 @@ export async function POST(request: NextRequest) {
     };
 
     const payload = {
-      content: `<@${user.id}>`,
       allowed_mentions: { users: [user.id] },
       embeds: [embed],
     };

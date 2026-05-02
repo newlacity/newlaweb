@@ -133,7 +133,6 @@ export async function POST(request: NextRequest) {
         value: row.value,
         inline: false,
       })),
-      footer: { text: "Formulaire site · une ligne = une question (type Google Forms)" },
     };
 
     const payload = {

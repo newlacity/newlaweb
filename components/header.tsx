@@ -175,7 +175,7 @@ export function Header() {
                 </button>
 
                 {isNousRejoindreOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-52 bg-neutral-900/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm z-50">
+                  <div className="absolute top-full left-0 mt-2 w-52 bg-neutral-900/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm z-50">
                     <div className="py-2">
                       <Link
                         href="/whitelist"

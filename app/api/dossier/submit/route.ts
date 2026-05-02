@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         `Horodatage : **${submittedFr}**\n\n` +
         "**Répondant**\n" +
         `${user.username ?? "—"}${discriminator} · \`${user.id}\``,
-      color: kind === "legal" ? 0x2563eb : 0xdc2626,
+      color: kind === "legal" ? 0x22c55e : 0xdc2626,
       fields: fields.map((row) => ({
         name: row.name,
         value: row.value,

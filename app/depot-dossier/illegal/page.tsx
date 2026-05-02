@@ -5,12 +5,14 @@ export default function DepotDossierIllegalPage() {
     <DossierFormPage
       type="illegal"
       title="Dépôt de dossier illégal"
-      subtitle="Remplissez ce formulaire pour déposer votre dossier illégal sur le serveur."
+      subtitle="Décrivez votre ligne criminelle en cohérence avec le règlement illégal : projets, territoire, drogue, extensions économiques. Le RP réaliste et les conséquences (arrestations, échecs) sont attendus."
       prepList={[
-        "Le type d'activité illégale concernée",
-        "Les preuves et captures utiles",
-        "Les noms/IDs Discord des personnes impliquées",
-        "Les dates/heures des événements",
+        "Projets illégaux à court et moyen terme (objectifs RP clairs)",
+        "Zones visées pour influence ou contrôle (sans meta/abuse de claim)",
+        "Lignes de drogue envisagées (production, vente, distribution, partenaires RP)",
+        "Intentions d'acquisition ou reprise de business (légal ou illégal), avec motivation RP",
+        "Respect des restrictions (cooldowns braquages, plages horaires majeurs, fair-play)",
+        "Discord / pseudos des contacts ou cellule si déjà constituée",
       ]}
     />
   );

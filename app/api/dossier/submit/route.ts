@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DISCORD_EMBED_FIELD_VALUE_MAX } from "@/lib/dossier-limits";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -6,40 +7,36 @@ export const runtime = "nodejs";
 const DOSSIER_LEGAL_WEBHOOK_URL = process.env.DOSSIER_LEGAL_WEBHOOK_URL;
 const DOSSIER_ILLEGAL_WEBHOOK_URL = process.env.DOSSIER_ILLEGAL_WEBHOOK_URL;
 
-/** Limite par réponse pour rester sous le plafond global d’embed Discord (~6000 car.). */
-const MAX_VALUE_LEN = 380;
-
 type DossierKind = "legal" | "illegal";
 
-function trimValue(raw: unknown): string {
-  const s = String(raw ?? "").trim();
-  if (!s) return "—";
-  if (s.length <= MAX_VALUE_LEN) return s;
-  return `${s.slice(0, MAX_VALUE_LEN - 1)}…`;
-}
-
-/** Titre en blanc dans un bloc ansi (les noms de champs Discord ne peuvent pas être colorés). */
+/** Titre en blanc gras dans un bloc ansi (les noms de champs Discord ne peuvent pas être colorés). */
 function buildTitleBlock(questionTitle: string): string {
   const safe = questionTitle.replace(/```/g, "'''");
   return `\`\`\`ansi\n\u001b[1;37m${safe}\u001b[0m\n\`\`\``;
 }
 
-function buildFormFieldValue(questionTitle: string, answer: string): string {
+function trimAnswer(raw: unknown, maxLen: number): string {
+  const s = String(raw ?? "").trim();
+  if (!s) return "—";
+  if (s.length <= maxLen) return s;
+  return `${s.slice(0, Math.max(0, maxLen - 1))}…`;
+}
+
+/** Une valeur d’embed Discord ≤ 1024 car. : en-tête ansi + saut de ligne + réponse. */
+function buildFormFieldValue(questionTitle: string, raw: unknown): string {
   const header = buildTitleBlock(questionTitle);
-  const body = trimValue(answer);
-  const sep = "\n";
-  let out = `${header}${sep}${body}`;
-  const max = 1024;
-  if (out.length <= max) return out;
-  const overhead = header.length + sep.length + 1;
-  const room = Math.max(0, max - overhead);
-  return `${header}${sep}${body.slice(0, room)}…`;
+  const maxBody = Math.max(
+    1,
+    DISCORD_EMBED_FIELD_VALUE_MAX - header.length - 1,
+  );
+  const body = trimAnswer(raw, maxBody);
+  return `${header}\n${body}`;
 }
 
 function buildFormFields(
   kind: DossierKind,
   body: Record<string, unknown>,
-): { name: string; value: string }[] {
+): { question: string; raw: unknown }[] {
   const common: [string, unknown][] = [
     ["1. Âge (IRL ou RP, précisez)", body.age],
     ["2. Disponibilités", body.disponibilites],
@@ -67,10 +64,7 @@ function buildFormFields(
       ["10. Capital & financement", body.capitalEtFinancement],
       ["11. Informations complémentaires", body.details],
     ];
-    return rows.map(([name, v]) => ({
-      name,
-      value: trimValue(v),
-    }));
+    return rows.map(([question, raw]) => ({ question, raw }));
   }
 
   const rows: [string, unknown][] = [
@@ -81,10 +75,7 @@ function buildFormFields(
     ["8. Acquisition ou reprise de business", body.businessAAcquire],
     ["9. Informations complémentaires", body.details],
   ];
-  return rows.map(([name, v]) => ({
-    name,
-    value: trimValue(v),
-  }));
+  return rows.map(([question, raw]) => ({ question, raw }));
 }
 
 export async function POST(request: NextRequest) {
@@ -159,7 +150,7 @@ export async function POST(request: NextRequest) {
         ...headerFields,
         ...formRows.map((row) => ({
           name: "\u200b",
-          value: buildFormFieldValue(row.name, row.value),
+          value: buildFormFieldValue(row.question, row.raw),
           inline: false,
         })),
       ],

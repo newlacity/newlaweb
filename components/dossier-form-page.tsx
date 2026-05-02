@@ -3,6 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Shield, User, Briefcase, FileText, Send, MapPin, Pill, Building2, Coins } from "lucide-react";
+import {
+  DOSSIER_SHORT_INPUT_MAX_LENGTH,
+  DOSSIER_TEXTAREA_MAX_LENGTH,
+} from "@/lib/dossier-limits";
 
 type DossierType = "legal" | "illegal" | "staff";
 
@@ -120,6 +124,10 @@ export function DossierFormPage({
         ? "Informations complémentaires (livrables, calendrier, contacts RP…)"
         : "Informations complémentaires (cohérence RP, risques, partenaires…)";
 
+  const isDossierWebhook = type === "legal" || type === "illegal";
+  const shortMax = isDossierWebhook ? DOSSIER_SHORT_INPUT_MAX_LENGTH : undefined;
+  const longMax = isDossierWebhook ? DOSSIER_TEXTAREA_MAX_LENGTH : undefined;
+
   const reglementLinks =
     type === "legal"
       ? [
@@ -198,6 +206,21 @@ export function DossierFormPage({
             onSubmit={handleSubmit}
             className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5"
           >
+            {isDossierWebhook && (
+              <p className="text-white/60 text-sm -mt-1">
+                Limite Discord : jusqu&apos;à{" "}
+                <span className="text-white font-medium">
+                  {DOSSIER_SHORT_INPUT_MAX_LENGTH}
+                </span>{" "}
+                caractères pour les champs courts, et{" "}
+                <span className="text-white font-medium">
+                  {DOSSIER_TEXTAREA_MAX_LENGTH}
+                </span>{" "}
+                caractères par zone de texte longue (le webhook tronque au-delà
+                du plafond technique).
+              </p>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white mb-2 text-sm">
@@ -209,6 +232,7 @@ export function DossierFormPage({
                   value={formData.age}
                   onChange={handleChange}
                   required
+                  maxLength={shortMax}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                   placeholder="Ex : 21 ans IRL / 32 ans RP"
                 />
@@ -223,6 +247,7 @@ export function DossierFormPage({
                   value={formData.disponibilites}
                   onChange={handleChange}
                   required
+                  maxLength={shortMax}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                   placeholder="Ex : soirs + week-end"
                 />
@@ -238,6 +263,7 @@ export function DossierFormPage({
                 value={formData.experience}
                 onChange={handleChange}
                 required
+                maxLength={longMax}
                 rows={4}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                 placeholder="Parcours, factions, types de scènes déjà jouées…"
@@ -253,6 +279,7 @@ export function DossierFormPage({
                 value={formData.motivation}
                 onChange={handleChange}
                 required
+                maxLength={longMax}
                 rows={4}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                 placeholder="Pourquoi ce dossier maintenant, et ce que vous apportez au serveur…"
@@ -272,6 +299,7 @@ export function DossierFormPage({
                       value={formData.nomStructure}
                       onChange={handleChange}
                       required
+                      maxLength={shortMax}
                       className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                       placeholder="Ex : Los Santos Logistics Inc."
                     />
@@ -285,6 +313,7 @@ export function DossierFormPage({
                       value={formData.typeActivite}
                       onChange={handleChange}
                       required
+                      maxLength={shortMax}
                       className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                       placeholder="Commerce, restauration, garage, import-export…"
                     />
@@ -301,6 +330,7 @@ export function DossierFormPage({
                     value={formData.prixProduitsEtServices}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={5}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Listez les articles ou prestations avec le prix public prévu (ex : menu à 45 $, réparation moteur 120 $…). Indiquez si les prix sont fixes ou négociables."
@@ -316,6 +346,7 @@ export function DossierFormPage({
                     value={formData.salairesEtPrimes}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={5}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Fourchettes ou montants par poste (ex : vendeur 800–1200 $/semaine RP, manager + primes objectifs…). Précisez la fréquence de versement RP."
@@ -332,6 +363,7 @@ export function DossierFormPage({
                     value={formData.politiqueRecrutement}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Entretiens RP, période d'essai, formation poste, hiérarchie prévue…"
@@ -347,6 +379,7 @@ export function DossierFormPage({
                     value={formData.capitalEtFinancement}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Montant ou fourchette RP, origine des fonds RP, besoins locaux / stock / véhicules…"
@@ -366,6 +399,7 @@ export function DossierFormPage({
                     value={formData.projetsAVenir}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={5}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Objectifs RP sur 1–4 semaines : braquages, expansion, alliances, guerre d’influence… Restez réalistes et cohérents avec le règlement (cooldowns, horaires braquages majeurs, etc.)."
@@ -382,6 +416,7 @@ export function DossierFormPage({
                     value={formData.controleZones}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Quartiers, points de vente, routes, lieux stratégiques… Expliquez le RP derrière (pas de ‘claim’ abusif hors scène)."
@@ -398,6 +433,7 @@ export function DossierFormPage({
                     value={formData.lignesDrogue}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Production, gros, détail, territoire cible, partenaires ou grossistes RP…"
@@ -414,6 +450,7 @@ export function DossierFormPage({
                     value={formData.businessAAcquire}
                     onChange={handleChange}
                     required
+                    maxLength={longMax}
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                     placeholder="Oui / Non. Si oui : lequel, avec quel RP (extorsion, achat, infiltration…), et le calendrier envisagé."
@@ -432,6 +469,7 @@ export function DossierFormPage({
                 value={formData.details}
                 onChange={handleChange}
                 required
+                maxLength={longMax}
                 rows={type === "staff" ? 5 : 4}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white outline-none focus:border-white"
                 placeholder={

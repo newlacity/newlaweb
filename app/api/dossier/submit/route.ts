@@ -9,6 +9,8 @@ const DOSSIER_ILLEGAL_WEBHOOK_URL = process.env.DOSSIER_ILLEGAL_WEBHOOK_URL;
 /** Limite par réponse pour rester sous le plafond global d’embed Discord (~6000 car.). */
 const MAX_VALUE_LEN = 380;
 
+type DossierKind = "legal" | "illegal";
+
 function trimValue(raw: unknown): string {
   const s = String(raw ?? "").trim();
   if (!s) return "—";
@@ -16,7 +18,28 @@ function trimValue(raw: unknown): string {
   return `${s.slice(0, MAX_VALUE_LEN - 1)}…`;
 }
 
-type DossierKind = "legal" | "illegal";
+/** Titre coloré (vert légal / rouge illégal) : Discord ne colore pas les `name`, seulement les `value` (bloc ansi). */
+function buildColoredTitleBlock(kind: DossierKind, questionTitle: string): string {
+  const ansiColor = kind === "legal" ? 32 : 31;
+  const safe = questionTitle.replace(/```/g, "'''");
+  return `\`\`\`ansi\n\u001b[1;${ansiColor}m${safe}\u001b[0m\n\`\`\``;
+}
+
+function buildFormFieldValue(
+  kind: DossierKind,
+  questionTitle: string,
+  answer: string,
+): string {
+  const header = buildColoredTitleBlock(kind, questionTitle);
+  const body = trimValue(answer);
+  const sep = "\n";
+  let out = `${header}${sep}${body}`;
+  const max = 1024;
+  if (out.length <= max) return out;
+  const overhead = header.length + sep.length + 1;
+  const room = Math.max(0, max - overhead);
+  return `${header}${sep}${body.slice(0, room)}…`;
+}
 
 function buildFormFields(
   kind: DossierKind,
@@ -49,7 +72,10 @@ function buildFormFields(
       ["10. Capital & financement", body.capitalEtFinancement],
       ["11. Informations complémentaires", body.details],
     ];
-    return rows.map(([name, v]) => ({ name, value: trimValue(v) }));
+    return rows.map(([name, v]) => ({
+      name,
+      value: trimValue(v),
+    }));
   }
 
   const rows: [string, unknown][] = [
@@ -60,7 +86,10 @@ function buildFormFields(
     ["8. Acquisition ou reprise de business", body.businessAAcquire],
     ["9. Informations complémentaires", body.details],
   ];
-  return rows.map(([name, v]) => ({ name, value: trimValue(v) }));
+  return rows.map(([name, v]) => ({
+    name,
+    value: trimValue(v),
+  }));
 }
 
 export async function POST(request: NextRequest) {
@@ -103,7 +132,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const fields = buildFormFields(kind, body);
+    const formRows = buildFormFields(kind, body);
     const submittedFr = new Date().toLocaleString("fr-FR", {
       dateStyle: "full",
       timeStyle: "short",
@@ -135,9 +164,9 @@ export async function POST(request: NextRequest) {
       color: kind === "legal" ? 0x22c55e : 0xdc2626,
       fields: [
         ...headerFields,
-        ...fields.map((row) => ({
-          name: row.name,
-          value: row.value,
+        ...formRows.map((row) => ({
+          name: "\u200b",
+          value: buildFormFieldValue(kind, row.name, row.value),
           inline: false,
         })),
       ],

@@ -114,25 +114,33 @@ export async function POST(request: NextRequest) {
         ? "Dépôt de dossier — Légal"
         : "Dépôt de dossier — Illégal";
 
-    const discriminator =
-      user.discriminator && user.discriminator !== "0"
-        ? `#${user.discriminator}`
-        : "";
+    const headerFields = [
+      {
+        name: "Répondant",
+        value: `<@${user.id}>`,
+        inline: true,
+      },
+      {
+        name: "ID",
+        value: `\`${user.id}\``,
+        inline: true,
+      },
+    ];
 
     const embed = {
       title: `Réponses · ${formTitle}`,
       description:
-        `<@${user.id}>\n\n` +
         "**Nouvelle réponse au formulaire**\n" +
-        `Horodatage : **${submittedFr}**\n\n` +
-        "**Répondant**\n" +
-        `${user.username ?? "—"}${discriminator} · \`${user.id}\``,
+        `Horodatage : **${submittedFr}**`,
       color: kind === "legal" ? 0x22c55e : 0xdc2626,
-      fields: fields.map((row) => ({
-        name: row.name,
-        value: row.value,
-        inline: false,
-      })),
+      fields: [
+        ...headerFields,
+        ...fields.map((row) => ({
+          name: row.name,
+          value: row.value,
+          inline: false,
+        })),
+      ],
     };
 
     const payload = {

@@ -14,7 +14,7 @@ export function Header() {
   const [showSubHeader, setShowSubHeader] = useState(false);
   const [subHeaderAnimated, setSubHeaderAnimated] = useState(false);
   const [isReglementDropdownOpen, setIsReglementDropdownOpen] = useState(false);
-  const [isDossierDropdownOpen, setIsDossierDropdownOpen] = useState(false);
+  const [isNousRejoindreOpen, setIsNousRejoindreOpen] = useState(false);
   const subHeaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function Header() {
 
   useEffect(() => {
     setIsReglementDropdownOpen(false);
-    setIsDossierDropdownOpen(false);
+    setIsNousRejoindreOpen(false);
     setIsMenuOpen(false);
   }, [pathname]);
 
@@ -105,7 +105,7 @@ export function Header() {
                 <button
                   onClick={() => {
                     setIsReglementDropdownOpen(!isReglementDropdownOpen);
-                    setIsDossierDropdownOpen(false);
+                    setIsNousRejoindreOpen(false);
                   }}
                   className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
@@ -158,49 +158,54 @@ export function Header() {
                 )}
               </div>
 
-              <Link
-                href="/whitelist"
-                className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
-              >
-                <span>Whitelist</span>
-              </Link>
-
-              {/* Dépôt de dossier Dropdown */}
+              {/* Nous rejoindre : whitelist + dépôts */}
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => {
-                    setIsDossierDropdownOpen(!isDossierDropdownOpen);
+                    setIsNousRejoindreOpen(!isNousRejoindreOpen);
                     setIsReglementDropdownOpen(false);
                   }}
                   className="text-white/80 hover:text-white transition-colors duration-300 flex items-center space-x-2"
                 >
-                  <span>Dépôt de dossier</span>
+                  <span>Nous rejoindre</span>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-300 ${isDossierDropdownOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 transition-transform duration-300 ${isNousRejoindreOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 
-                {isDossierDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-72 bg-neutral-900/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm z-50">
+                {isNousRejoindreOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-neutral-900/95 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm z-50">
                     <div className="py-2">
+                      <Link
+                        href="/whitelist"
+                        className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
+                        onClick={() => setIsNousRejoindreOpen(false)}
+                      >
+                        Passer sa whitelist
+                      </Link>
+                      <div className="my-1 border-t border-white/10" />
+                      <p className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white/45">
+                        Dépôt de dossier
+                      </p>
                       <Link
                         href="/depot-dossier/legal"
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
-                        onClick={() => setIsDossierDropdownOpen(false)}
+                        onClick={() => setIsNousRejoindreOpen(false)}
                       >
                         Dépôt de dossier légal
                       </Link>
                       <Link
                         href="/depot-dossier/illegal"
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
-                        onClick={() => setIsDossierDropdownOpen(false)}
+                        onClick={() => setIsNousRejoindreOpen(false)}
                       >
                         Dépôt de dossier illégal
                       </Link>
                       <Link
                         href="/depot-dossier/staff"
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
-                        onClick={() => setIsDossierDropdownOpen(false)}
+                        onClick={() => setIsNousRejoindreOpen(false)}
                       >
                         Devenir staff
                       </Link>
@@ -248,7 +253,7 @@ export function Header() {
         {/* Mobile Navigation */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-500 ${
-            isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+            isMenuOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <nav className="py-8 space-y-4">
@@ -274,12 +279,22 @@ export function Header() {
               <span>Boutique</span>
             </Link>
 
-            {/* Dépôt de dossier Mobile */}
+            {/* Nous rejoindre Mobile */}
             <div className="space-y-2">
               <div className="flex items-center space-x-4 text-white/60 text-lg font-light p-3">
-                <span>Dépôt de dossier</span>
+                <span>Nous rejoindre</span>
               </div>
               <div className="ml-4 space-y-2">
+                <Link
+                  href="/whitelist"
+                  className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Passer sa whitelist
+                </Link>
+                <p className="px-2 pt-1 text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                  Dépôt de dossier
+                </p>
                 <Link
                   href="/depot-dossier/legal"
                   className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"

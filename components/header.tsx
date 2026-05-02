@@ -193,21 +193,21 @@ export function Header() {
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsNousRejoindreOpen(false)}
                       >
-                        Dépôt de dossier légal
+                        Légal
                       </Link>
                       <Link
                         href="/depot-dossier/illegal"
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsNousRejoindreOpen(false)}
                       >
-                        Dépôt de dossier illégal
+                        Illégal
                       </Link>
                       <Link
                         href="/depot-dossier/staff"
                         className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 transition-colors duration-300"
                         onClick={() => setIsNousRejoindreOpen(false)}
                       >
-                        Devenir staff
+                        Staff
                       </Link>
                     </div>
                   </div>
@@ -300,21 +300,21 @@ export function Header() {
                   className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Dépôt de dossier légal
+                  Légal
                 </Link>
                 <Link
                   href="/depot-dossier/illegal"
                   className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Dépôt de dossier illégal
+                  Illégal
                 </Link>
                 <Link
                   href="/depot-dossier/staff"
                   className="block text-white/50 hover:text-white transition-all duration-300 text-sm font-light p-2 rounded-lg hover:bg-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Devenir staff
+                  Staff
                 </Link>
               </div>
             </div>

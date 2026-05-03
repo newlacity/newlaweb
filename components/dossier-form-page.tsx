@@ -206,21 +206,6 @@ export function DossierFormPage({
             onSubmit={handleSubmit}
             className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5"
           >
-            {isDossierWebhook && (
-              <p className="text-white/60 text-sm -mt-1">
-                Limite Discord : jusqu&apos;à{" "}
-                <span className="text-white font-medium">
-                  {DOSSIER_SHORT_INPUT_MAX_LENGTH}
-                </span>{" "}
-                caractères pour les champs courts, et{" "}
-                <span className="text-white font-medium">
-                  {DOSSIER_TEXTAREA_MAX_LENGTH}
-                </span>{" "}
-                caractères par zone de texte longue (le webhook tronque au-delà
-                du plafond technique).
-              </p>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white mb-2 text-sm">

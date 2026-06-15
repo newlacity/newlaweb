@@ -554,7 +554,7 @@ export default function WhitelistPage() {
           </p>
           <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
             <p className="text-green-400 text-sm">
-              Le rôle "Attente Entretien" a été ajouté à votre compte Discord.
+              Le rôle « Quizz validé » a été ajouté à votre compte Discord.
             </p>
           </div>
           <div className="space-y-3">
@@ -626,8 +626,8 @@ export default function WhitelistPage() {
           {score >= 30 ? (
             <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
               <p className="text-green-400 text-sm">
-                Félicitations ! Vous avez réussi le quiz. Le rôle whitelist va
-                être ajouté à votre compte Discord.
+                Félicitations ! Vous avez réussi le quiz. Le rôle « Quizz validé »
+                va être ajouté à votre compte Discord.
               </p>
             </div>
           ) : (

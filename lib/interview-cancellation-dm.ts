@@ -84,6 +84,8 @@ export async function sendInterviewCancellationDm(params: {
           "Nous sommes **désolés du dérangement**. Votre entretien oral ne pourra pas avoir lieu à la date prévue en raison d'un **empêchement** de notre côté.",
           "",
           "Merci de **reprendre un nouveau créneau** sur le site pour planifier votre entretien.",
+          "",
+          "En attendant, vous pouvez prendre connaissance des règlements officiels du serveur :",
         ].join("\n"),
         color: 0x006bff,
         fields: [
@@ -100,6 +102,20 @@ export async function sendInterviewCancellationDm(params: {
           {
             name: "Reprendre un créneau",
             value: `[Accéder à la whitelist](${WHITELIST_URL}/whitelist)`,
+            inline: false,
+          },
+          {
+            name: "Règlements du serveur",
+            value: [
+              "🔹 **Règlement Général**",
+              `${WHITELIST_URL}/reglement-general`,
+              "",
+              "🔹 **Règlement Illégal**",
+              `${WHITELIST_URL}/reglement-illegal`,
+              "",
+              "🔹 **Règlement des Sociétés**",
+              `${WHITELIST_URL}/reglement-societes`,
+            ].join("\n"),
             inline: false,
           },
         ],

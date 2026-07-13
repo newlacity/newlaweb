@@ -60,9 +60,32 @@ function formatSlot(iso: string) {
 
 const calendarFormatters = {
   formatWeekdayName: (date: Date) => {
-    const name = format(date, "EEEE", { locale: fr });
-    return name.charAt(0).toUpperCase() + name.slice(1);
+    const abbr = format(date, "EEE", { locale: fr }).replace(".", "");
+    return abbr.charAt(0).toUpperCase() + abbr.slice(1);
   },
+};
+
+const panelCalendarClassNames = {
+  months: "flex flex-col w-full",
+  month: "space-y-4 w-full",
+  caption: "flex justify-center relative items-center mb-2 h-10",
+  caption_label: "text-base font-semibold text-white capitalize",
+  nav: "flex items-center",
+  nav_button:
+    "h-9 w-9 inline-flex items-center justify-center rounded-lg border border-white/20 bg-transparent text-white opacity-80 hover:opacity-100 hover:bg-white/10 p-0",
+  nav_button_previous: "absolute left-0",
+  nav_button_next: "absolute right-0",
+  table: "w-full border-collapse",
+  head_row: "flex w-full mb-1",
+  head_cell:
+    "text-white/50 flex-1 min-w-0 text-center font-medium text-xs sm:text-sm py-2 px-0.5",
+  row: "flex w-full mt-1",
+  cell: "flex-1 min-w-0 flex items-center justify-center p-0.5",
+  day: "h-10 w-10 max-w-full mx-auto p-0 font-normal text-white rounded-lg hover:bg-white/10 aria-selected:opacity-100",
+  day_selected: "bg-[#006BFF] text-white hover:bg-[#006BFF] font-semibold",
+  day_today: "bg-white/10 text-white ring-1 ring-white/20",
+  day_outside: "text-white/25 opacity-60",
+  day_disabled: "text-white/20 opacity-40 hover:bg-transparent",
 };
 
 export default function PanelEntretiensPage() {
@@ -282,8 +305,8 @@ export default function PanelEntretiensPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-10 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-2">
           Panel — Entretiens oraux
         </h1>
@@ -327,8 +350,8 @@ export default function PanelEntretiensPage() {
         </div>
 
         {tab === "slots" && (
-          <div className="space-y-8">
-            <div className="bg-[#006BFF]/10 border border-[#006BFF]/30 rounded-xl p-6">
+          <div className="space-y-6 lg:space-y-8">
+            <div className="bg-[#006BFF]/10 border border-[#006BFF]/30 rounded-xl p-6 lg:p-8">
               <h2 className="text-white font-semibold text-lg mb-2">
                 Ajouter des dates
               </h2>
@@ -368,27 +391,23 @@ export default function PanelEntretiensPage() {
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                <h2 className="text-white font-medium mb-4">Choisir une date</h2>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(d) => d && setSelectedDate(d)}
-                  locale={fr}
-                  formatters={calendarFormatters}
-                  classNames={{
-                    day_selected:
-                      "bg-[#006BFF] text-white hover:bg-[#006BFF]",
-                    caption_label: "text-white",
-                    head_cell: "text-white/50",
-                    day: "text-white hover:bg-white/10",
-                    nav_button: "text-white border-white/20",
-                  }}
-                />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-10">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6 lg:p-8 min-w-0">
+                <h2 className="text-white font-medium mb-6">Choisir une date</h2>
+                <div className="w-full overflow-x-auto">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(d) => d && setSelectedDate(d)}
+                    locale={fr}
+                    formatters={calendarFormatters}
+                    className="w-full min-w-[320px] p-0 pointer-events-auto"
+                    classNames={panelCalendarClassNames}
+                  />
+                </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6 lg:p-8 min-w-0 flex flex-col">
                 <h2 className="text-white font-medium mb-4">
                   Ajouter des créneaux
                 </h2>
@@ -398,7 +417,7 @@ export default function PanelEntretiensPage() {
                     {format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}
                   </span>
                 </p>
-                <div className="rounded-lg bg-white/5 border border-white/10 p-4 mb-4 space-y-2">
+                <div className="rounded-lg bg-white/5 border border-white/10 p-5 mb-5 space-y-2.5 flex-1">
                   <p className="text-white/70 text-xs font-medium uppercase tracking-wide">
                     Horaires automatiques
                   </p>
@@ -419,21 +438,21 @@ export default function PanelEntretiensPage() {
                 <button
                   onClick={handleCreateSlots}
                   disabled={creating}
-                  className="w-full bg-[#006BFF] text-white py-2.5 rounded-lg font-medium hover:bg-[#0052CC] disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full mt-auto bg-[#006BFF] text-white py-3 rounded-lg font-medium hover:bg-[#0052CC] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {creating && <Loader2 className="w-4 h-4 animate-spin" />}
                   Générer les créneaux
                 </button>
                 {message && (
-                  <p className="text-green-400 text-sm mt-3">{message}</p>
+                  <p className="text-green-400 text-sm mt-4">{message}</p>
                 )}
                 {error && (
-                  <p className="text-red-400 text-sm mt-3">{error}</p>
+                  <p className="text-red-400 text-sm mt-4">{error}</p>
                 )}
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 lg:p-8">
               <h2 className="text-white font-medium mb-4">
                 Créneaux du{" "}
                 {format(selectedDate, "d MMMM yyyy", { locale: fr })}
@@ -441,22 +460,22 @@ export default function PanelEntretiensPage() {
               {slots.length === 0 ? (
                 <p className="text-white/50 text-sm">Aucun créneau ce jour.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {slots.map((slot) => (
                     <div
                       key={slot.id}
-                      className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3"
+                      className="flex items-center justify-between gap-3 bg-white/5 rounded-lg px-4 py-3 min-w-0"
                     >
-                      <div>
-                        <span className="text-white text-sm">
+                      <div className="min-w-0">
+                        <span className="text-white text-sm block">
                           {format(parseISO(slot.starts_at), "HH:mm")} — 30 min
                         </span>
                         {slot.booking ? (
-                          <span className="text-green-400 text-xs ml-3">
-                            Réservé par {slot.booking.username}
+                          <span className="text-green-400 text-xs block truncate mt-0.5">
+                            Réservé · {slot.booking.username}
                           </span>
                         ) : (
-                          <span className="text-white/40 text-xs ml-3">
+                          <span className="text-white/40 text-xs block mt-0.5">
                             Libre
                           </span>
                         )}

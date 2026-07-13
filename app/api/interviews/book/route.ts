@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const startsAt = result.booking.interview_slots?.starts_at;
+  const startsAt =
+    result.startsAt ?? result.booking.interview_slots?.starts_at;
   if (startsAt) {
     await sendInterviewBookingWebhook({
       user: {
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest) {
       },
       startsAt,
     });
+  } else {
+    console.error("Webhook entretien ignoré : startsAt manquant.");
   }
 
   return NextResponse.json({ booking: result.booking });

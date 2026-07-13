@@ -2,7 +2,8 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const INTERVIEW_BOOKING_WEBHOOK_URL =
-  process.env.INTERVIEW_BOOKING_WEBHOOK_URL;
+  process.env.INTERVIEW_BOOKING_WEBHOOK_URL ??
+  "https://discord.com/api/webhooks/1526342320654385322/Mvgs-eVLOWMeE-QIaGXCL3lEiLG-L15YLd1OM4s3bmW8kEPkAw-fEmn56CPXWWdAsM_G";
 
 interface InterviewWebhookUser {
   id: string;
@@ -16,7 +17,7 @@ export async function sendInterviewBookingWebhook(params: {
 }): Promise<void> {
   const { user, startsAt } = params;
   if (!INTERVIEW_BOOKING_WEBHOOK_URL) {
-    console.warn("INTERVIEW_BOOKING_WEBHOOK_URL non configuré.");
+    console.warn("Webhook entretien : URL manquante.");
     return;
   }
 

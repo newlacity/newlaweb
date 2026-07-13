@@ -16,6 +16,29 @@ export function getTodayParisDateString(): string {
   }).format(new Date());
 }
 
+export function getParisCalendarDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+}
+
+function getParisUtcOffset(dateStr: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Paris",
+    timeZoneName: "shortOffset",
+  }).formatToParts(new Date(`${dateStr}T12:00:00Z`));
+  const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+1";
+  const match = raw.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+  if (!match) return "+01:00";
+  const sign = match[1];
+  const hours = match[2].padStart(2, "0");
+  const mins = match[3] ?? "00";
+  return `${sign}${hours}:${mins}`;
+}
+
 /** Réservation interdite le jour même (fuseau Paris). */
 export function isBookableCalendarDate(dateStr: string): boolean {
   return dateStr > getTodayParisDateString();
@@ -40,7 +63,8 @@ function slotsFromTo(
   while (min <= endMin) {
     const hh = String(Math.floor(min / 60)).padStart(2, "0");
     const mm = String(min % 60).padStart(2, "0");
-    result.push(`${date}T${hh}:${mm}:00`);
+    const offset = getParisUtcOffset(date);
+    result.push(`${date}T${hh}:${mm}:00${offset}`);
     min += SLOT_DURATION_MINUTES;
   }
   return result;

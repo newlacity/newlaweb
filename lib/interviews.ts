@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabase";
 import {
+  getParisCalendarDate,
   getScheduledSlotStartsForDate,
   getTodayParisDateString,
   isBookableCalendarDate,
@@ -92,7 +93,10 @@ export const interviewService = {
 
     const bookedIds = new Set(bookings?.map((b) => b.slot_id) ?? []);
     const available = slots.filter(
-      (s) => !bookedIds.has(s.id) && isBookableSlotStart(s.starts_at),
+      (s) =>
+        !bookedIds.has(s.id) &&
+        getParisCalendarDate(s.starts_at) === date &&
+        isBookableSlotStart(s.starts_at),
     );
     const order = sortSlotsForDisplay(available.map((s) => s.starts_at));
     const orderIndex = new Map(order.map((t, i) => [t, i]));
@@ -109,7 +113,7 @@ export const interviewService = {
       .from("interview_slots")
       .select("id, starts_at")
       .eq("is_active", true)
-      .gt("starts_at", `${today}T23:59:59`)
+      .gte("starts_at", `${today}T00:00:00`)
       .order("starts_at", { ascending: true });
 
     if (!slots?.length) return [];
@@ -126,7 +130,7 @@ export const interviewService = {
     const bookedIds = new Set(bookings?.map((b) => b.slot_id) ?? []);
     const dates = new Set<string>();
     for (const slot of slots) {
-      const dateStr = slot.starts_at.slice(0, 10);
+      const dateStr = getParisCalendarDate(slot.starts_at);
       if (
         !bookedIds.has(slot.id) &&
         isBookableCalendarDate(dateStr) &&
@@ -160,7 +164,11 @@ export const interviewService = {
     userId: string,
     username: string,
     slotId: string,
-  ): Promise<{ booking: InterviewBooking | null; error?: string }> {
+  ): Promise<{
+    booking: InterviewBooking | null;
+    startsAt?: string;
+    error?: string;
+  }> {
     const supabase = getSupabase();
 
     const existing = await this.getUserBooking(userId);
@@ -212,7 +220,10 @@ export const interviewService = {
       return { booking: null, error: "Impossible de réserver ce créneau." };
     }
 
-    return { booking };
+    const startsAt =
+      booking?.interview_slots?.starts_at ?? slot.starts_at ?? undefined;
+
+    return { booking, startsAt };
   },
 
   async createSlots(

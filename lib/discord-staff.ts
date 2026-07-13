@@ -1,7 +1,17 @@
 import { NextRequest } from "next/server";
 
-export const INTERVIEW_ADMIN_ROLE_ID =
-  process.env.INTERVIEW_ADMIN_ROLE_ID ?? "1430996155415920703";
+const DEFAULT_INTERVIEW_ADMIN_ROLE_IDS = ["1430996155415920703"];
+
+export function getInterviewAdminRoleIds(): string[] {
+  const raw = process.env.INTERVIEW_ADMIN_ROLE_ID ?? "";
+  const fromEnv = raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return fromEnv.length ? fromEnv : DEFAULT_INTERVIEW_ADMIN_ROLE_IDS;
+}
+
+export const INTERVIEW_ADMIN_ROLE_ID = getInterviewAdminRoleIds()[0];
 
 function getAdminDiscordIds(): string[] {
   const raw = process.env.INTERVIEW_ADMIN_DISCORD_IDS ?? "";
@@ -61,12 +71,14 @@ export async function checkInterviewAdmin(
     }
 
     const member = (await res.json()) as { roles?: string[] };
-    const hasRole = member.roles?.includes(INTERVIEW_ADMIN_ROLE_ID) ?? false;
+    const memberRoles = member.roles ?? [];
+    const adminRoleIds = getInterviewAdminRoleIds();
+    const hasRole = adminRoleIds.some((roleId) => memberRoles.includes(roleId));
 
     if (!hasRole) {
       return {
         isAdmin: false,
-        reason: `Rôle staff requis (ID ${INTERVIEW_ADMIN_ROLE_ID}).`,
+        reason: `Rôle staff requis (IDs : ${adminRoleIds.join(", ")}). Rôles détectés : ${memberRoles.length ? memberRoles.join(", ") : "aucun"}.`,
       };
     }
 

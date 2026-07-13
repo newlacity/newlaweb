@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   checkInterviewAdminFromRequest,
 } from "@/lib/discord-staff";
+import { sendInterviewCancellationDm } from "@/lib/interview-cancellation-dm";
 import { interviewService } from "@/lib/interviews";
 
 export const dynamic = "force-dynamic";
@@ -45,5 +46,15 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true });
+  const startsAt = result.booking?.interview_slots?.starts_at;
+  let dmSent = false;
+  if (result.booking?.user_id && startsAt) {
+    dmSent = await sendInterviewCancellationDm({
+      userId: result.booking.user_id,
+      username: result.booking.username,
+      startsAt,
+    });
+  }
+
+  return NextResponse.json({ ok: true, dmSent });
 }

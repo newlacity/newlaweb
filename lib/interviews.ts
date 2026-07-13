@@ -400,14 +400,30 @@ export const interviewService = {
 
   async cancelBooking(
     bookingId: string,
-  ): Promise<{ ok: boolean; error?: string }> {
+  ): Promise<{
+    ok: boolean;
+    error?: string;
+    booking?: InterviewBooking;
+  }> {
     const supabase = getSupabase();
+
+    const { data: booking } = await supabase
+      .from("interview_bookings")
+      .select("*, interview_slots(*)")
+      .eq("id", bookingId)
+      .eq("status", "confirmed")
+      .maybeSingle();
+
+    if (!booking) {
+      return { ok: false, error: "Réservation introuvable ou déjà annulée." };
+    }
+
     const { error } = await supabase
       .from("interview_bookings")
       .update({ status: "cancelled" })
       .eq("id", bookingId);
 
     if (error) return { ok: false, error: "Erreur lors de l'annulation." };
-    return { ok: true };
+    return { ok: true, booking };
   },
 };

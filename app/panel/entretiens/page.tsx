@@ -252,11 +252,25 @@ export default function PanelEntretiensPage() {
       setBookings((prev) => prev.filter((b) => b.id !== bookingId));
       return;
     }
+    setMessage(null);
+    setError(null);
     const res = await fetch(
       `/api/interviews/admin/bookings?bookingId=${bookingId}`,
       { method: "DELETE" },
     );
-    if (res.ok) loadBookings();
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Erreur lors de l'annulation.");
+      return;
+    }
+    if (data.dmSent === false) {
+      setError(
+        "Réservation annulée, mais le MP Discord n'a pas pu être envoyé (DMs fermés ou bot indisponible).",
+      );
+    } else {
+      setMessage("Réservation annulée — MP envoyé au joueur.");
+    }
+    loadBookings();
   };
 
   if (loading) {

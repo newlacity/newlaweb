@@ -32,8 +32,8 @@ export async function sendInterviewBookingWebhook(params: {
   const slotTime = format(parseISO(startsAt), "HH:mm", { locale: fr });
 
   const payload = {
-    content: `<@${user.id}>`,
     allowed_mentions: {
+      parse: [],
       users: [user.id],
     },
     embeds: [

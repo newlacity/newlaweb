@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  checkInterviewAdmin,
   getDiscordUserFromRequest,
-  hasInterviewAdminRole,
 } from "@/lib/discord-staff";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const isAdmin = await hasInterviewAdminRole(user.id);
-  return NextResponse.json({ isAdmin });
+  const check = await checkInterviewAdmin(user.id);
+  return NextResponse.json({
+    isAdmin: check.isAdmin,
+    reason: check.reason,
+  });
 }

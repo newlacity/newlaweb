@@ -68,11 +68,14 @@ const calendarFormatters = {
 export default function PanelEntretiensPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminReason, setAdminReason] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("slots");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [slots, setSlots] = useState<SlotWithBooking[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [creating, setCreating] = useState(false);
+  const [bulkCreating, setBulkCreating] = useState(false);
+  const [bulkDays, setBulkDays] = useState(14);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +94,9 @@ export default function PanelEntretiensPage() {
     if (adminRes.ok) {
       const data = await adminRes.json();
       setIsAdmin(data.isAdmin);
+      if (!data.isAdmin && data.reason) {
+        setAdminReason(data.reason);
+      }
     }
     setLoading(false);
   }, []);
@@ -160,10 +166,42 @@ export default function PanelEntretiensPage() {
         setError(data.error ?? "Erreur");
         return;
       }
-      setMessage(`${data.created} créneau(x) de 30 min ajouté(s).`);
+      if (data.message) {
+        setMessage(data.message);
+      } else {
+        setMessage(`${data.created} créneau(x) de 30 min ajouté(s).`);
+      }
       loadSlots(selectedDate);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleBulkCreateDates = async () => {
+    setBulkCreating(true);
+    setMessage(null);
+    setError(null);
+    try {
+      if (isDevPreview) {
+        setMessage(
+          `${bulkDays} date(s) générée(s) avec créneaux (aperçu localhost).`,
+        );
+        return;
+      }
+      const res = await fetch("/api/interviews/admin/slots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ daysAhead: bulkDays }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Erreur");
+        return;
+      }
+      setMessage(data.message ?? `${data.created} créneau(x) ajouté(s).`);
+      loadSlots(selectedDate);
+    } finally {
+      setBulkCreating(false);
     }
   };
 
@@ -211,8 +249,8 @@ export default function PanelEntretiensPage() {
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Accès refusé</h1>
           <p className="text-white/60 text-sm">
-            Vous devez posséder le rôle staff autorisé sur Discord pour accéder
-            à ce panel.
+            {adminReason ??
+              "Vous devez posséder le rôle staff autorisé sur Discord pour accéder à ce panel."}
           </p>
         </div>
       </div>
@@ -329,6 +367,47 @@ export default function PanelEntretiensPage() {
                   <p className="text-red-400 text-sm mt-3">{error}</p>
                 )}
               </div>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+              <h2 className="text-white font-medium mb-2">
+                Ajouter des dates
+              </h2>
+              <p className="text-white/50 text-sm mb-4">
+                Génère automatiquement les créneaux pour plusieurs jours à
+                partir de demain. Les joueurs ne verront que les dates où des
+                créneaux existent en base.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[7, 14, 21, 30].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => setBulkDays(days)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      bulkDays === days
+                        ? "bg-[#006BFF] text-white"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    {days} jours
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleBulkCreateDates}
+                disabled={bulkCreating || creating}
+                className="w-full bg-white/10 border border-[#006BFF]/50 text-white py-2.5 rounded-lg font-medium hover:bg-[#006BFF]/20 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {bulkCreating && <Loader2 className="w-4 h-4 animate-spin" />}
+                Ajouter les créneaux pour {bulkDays} jours
+              </button>
+              {message && (
+                <p className="text-green-400 text-sm mt-3">{message}</p>
+              )}
+              {error && (
+                <p className="text-red-400 text-sm mt-3">{error}</p>
+              )}
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-6">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDiscordUserFromRequest } from "@/lib/discord-staff";
+import { sendInterviewBookingWebhook } from "@/lib/interview-webhook";
 import { interviewService } from "@/lib/interviews";
 import { whitelistService } from "@/lib/supabase";
 
@@ -37,6 +38,18 @@ export async function POST(request: NextRequest) {
       { error: result.error ?? "Réservation impossible." },
       { status: 400 },
     );
+  }
+
+  const startsAt = result.booking.interview_slots?.starts_at;
+  if (startsAt) {
+    await sendInterviewBookingWebhook({
+      user: {
+        id: user.id,
+        username: user.username,
+        discriminator: user.discriminator,
+      },
+      startsAt,
+    });
   }
 
   return NextResponse.json({ booking: result.booking });

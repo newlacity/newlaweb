@@ -220,7 +220,12 @@ export const interviewService = {
     date: string,
     _startTime?: string,
     _endTime?: string,
-  ): Promise<{ created: number; error?: string }> {
+  ): Promise<{
+    created: number;
+    total?: number;
+    alreadyExists?: boolean;
+    error?: string;
+  }> {
     const timestamps = getScheduledSlotStartsForDate(date);
     if (!timestamps.length) {
       return { created: 0, error: "Aucun créneau pour cette date." };
@@ -243,7 +248,53 @@ export const interviewService = {
       return { created: 0, error: "Erreur lors de la création des créneaux." };
     }
 
-    return { created: data?.length ?? 0 };
+    const created = data?.length ?? 0;
+    if (created === 0) {
+      const { count } = await supabase
+        .from("interview_slots")
+        .select("*", { count: "exact", head: true })
+        .in("starts_at", timestamps);
+
+      if (count && count > 0) {
+        return { created: 0, alreadyExists: true, total: count };
+      }
+    }
+
+    return { created };
+  },
+
+  async createSlotsForDates(
+    createdBy: string,
+    dates: string[],
+  ): Promise<{
+    created: number;
+    datesProcessed: number;
+    skippedDates: number;
+    error?: string;
+  }> {
+    let created = 0;
+    let datesProcessed = 0;
+    let skippedDates = 0;
+
+    for (const date of dates) {
+      const result = await this.createSlots(createdBy, date);
+      if (result.error && !result.alreadyExists) {
+        return {
+          created,
+          datesProcessed,
+          skippedDates,
+          error: result.error,
+        };
+      }
+      if (result.alreadyExists) {
+        skippedDates += 1;
+      } else {
+        created += result.created;
+        datesProcessed += 1;
+      }
+    }
+
+    return { created, datesProcessed, skippedDates };
   },
 
   async getAdminSlots(from: string, to: string): Promise<SlotWithBooking[]> {

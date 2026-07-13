@@ -5,6 +5,9 @@ const INTERVIEW_BOOKING_WEBHOOK_URL =
   process.env.INTERVIEW_BOOKING_WEBHOOK_URL ??
   "https://discord.com/api/webhooks/1526342320654385322/Mvgs-eVLOWMeE-QIaGXCL3lEiLG-L15YLd1OM4s3bmW8kEPkAw-fEmn56CPXWWdAsM_G";
 
+const INTERVIEW_BOOKING_CHANNEL_ID =
+  process.env.INTERVIEW_BOOKING_CHANNEL_ID ?? "";
+
 const INTERVIEW_EMBED_IMAGE_URL =
   process.env.INTERVIEW_EMBED_IMAGE_URL ??
   process.env.INTERVIEW_CANCELLATION_EMBED_IMAGE_URL ??
@@ -18,6 +21,31 @@ interface InterviewWebhookUser {
 
 export const INTERVIEW_ACCEPT_PREFIX = "int_a:";
 export const INTERVIEW_REJECT_PREFIX = "int_r:";
+
+function parseWebhookUrl(url: string): { id: string; token: string } | null {
+  const match = url.match(/webhooks\/(\d+)\/([^/?]+)/);
+  if (!match) return null;
+  return { id: match[1], token: match[2] };
+}
+
+async function resolveBookingChannelId(): Promise<string | null> {
+  if (INTERVIEW_BOOKING_CHANNEL_ID) return INTERVIEW_BOOKING_CHANNEL_ID;
+
+  const parsed = parseWebhookUrl(INTERVIEW_BOOKING_WEBHOOK_URL);
+  if (!parsed) return null;
+
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/webhooks/${parsed.id}/${parsed.token}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { channel_id?: string };
+    return data.channel_id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function buildInterviewActionButtons(bookingId: string) {
   return [
@@ -115,19 +143,19 @@ export function buildInterviewRequestEmbed(params: {
         inline: true,
       },
       {
-        name: "Date",
-        value: dateLabel,
+        name: "Discord ID",
+        value: user.id,
         inline: true,
       },
       {
         name: "Statut",
         value: statusLabels[status],
-        inline: false,
+        inline: true,
       },
       {
-        name: "Discord ID",
-        value: user.id,
-        inline: false,
+        name: "Date",
+        value: dateLabel,
+        inline: true,
       },
     ],
     image: {
@@ -136,16 +164,57 @@ export function buildInterviewRequestEmbed(params: {
   };
 }
 
+async function sendViaBotChannel(
+  channelId: string,
+  payload: object,
+): Promise<boolean> {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) {
+    console.warn("DISCORD_BOT_TOKEN manquant — envoi salon impossible.");
+    return false;
+  }
+
+  const res = await fetch(
+    `https://discord.com/api/v10/channels/${channelId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  if (!res.ok) {
+    console.error("Erreur envoi bot salon entretien:", await res.text());
+    return false;
+  }
+
+  return true;
+}
+
+async function sendViaWebhook(payload: object): Promise<boolean> {
+  const res = await fetch(INTERVIEW_BOOKING_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    console.error("Erreur webhook entretien:", await res.text());
+    return false;
+  }
+
+  return true;
+}
+
 export async function sendInterviewBookingWebhook(params: {
   bookingId: string;
   user: InterviewWebhookUser;
   startsAt: string;
 }): Promise<void> {
   const { bookingId, user, startsAt } = params;
-  if (!INTERVIEW_BOOKING_WEBHOOK_URL) {
-    console.warn("Webhook entretien : URL manquante.");
-    return;
-  }
 
   const payload = {
     allowed_mentions: {
@@ -163,15 +232,13 @@ export async function sendInterviewBookingWebhook(params: {
   };
 
   try {
-    const res = await fetch(INTERVIEW_BOOKING_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      console.error("Erreur webhook entretien:", await res.text());
+    const channelId = await resolveBookingChannelId();
+    if (channelId) {
+      const sent = await sendViaBotChannel(channelId, payload);
+      if (sent) return;
     }
+
+    await sendViaWebhook(payload);
   } catch (error) {
     console.error("Erreur envoi webhook entretien:", error);
   }

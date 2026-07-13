@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
+import { editInteractionOriginalMessage } from "@/lib/discord-interaction-edit";
 import { verifyDiscordRequest } from "@/lib/discord-verify";
 import { isDiscordInterviewStaff } from "@/lib/discord-staff";
 import {
@@ -14,9 +16,12 @@ import { interviewService } from "@/lib/interviews";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 interface DiscordInteraction {
   type: number;
+  application_id: string;
+  token: string;
   data?: { custom_id?: string };
   member?: {
     roles?: string[];
@@ -51,17 +56,149 @@ function parseBookingId(customId: string): {
   return null;
 }
 
+async function handleBookingDecision(
+  interaction: DiscordInteraction,
+  parsed: { action: "accept" | "reject"; bookingId: string },
+  staffUser: { id: string; username: string },
+) {
+  const booking = await interviewService.getBookingById(parsed.bookingId);
+
+  if (!booking?.interview_slots?.starts_at) {
+    await editInteractionOriginalMessage(
+      interaction.application_id,
+      interaction.token,
+      {
+        content: "❌ Demande introuvable.",
+        embeds: [],
+        components: [],
+      },
+    );
+    return;
+  }
+
+  const startsAt = booking.interview_slots.starts_at;
+  const player = {
+    id: booking.user_id,
+    username: booking.username,
+  };
+
+  if (booking.status !== "pending") {
+    await editInteractionOriginalMessage(
+      interaction.application_id,
+      interaction.token,
+      {
+        embeds: [
+          buildInterviewRequestEmbed({
+            user: player,
+            startsAt,
+            status: booking.status === "confirmed" ? "accepted" : "rejected",
+          }),
+        ],
+        components: [],
+      },
+    );
+    return;
+  }
+
+  if (parsed.action === "accept") {
+    const result = await interviewService.acceptBooking(parsed.bookingId);
+    if (!result.ok) {
+      await editInteractionOriginalMessage(
+        interaction.application_id,
+        interaction.token,
+        {
+          content: `❌ ${result.error ?? "Impossible d'accepter cette demande."}`,
+          embeds: [],
+          components: [],
+        },
+      );
+      return;
+    }
+
+    void sendInterviewAcceptanceDm({
+      userId: booking.user_id,
+      username: booking.username,
+      startsAt,
+    });
+
+    await editInteractionOriginalMessage(
+      interaction.application_id,
+      interaction.token,
+      {
+        embeds: [
+          buildInterviewRequestEmbed({
+            user: player,
+            startsAt,
+            status: "accepted",
+            handledBy: staffUser.username,
+          }),
+        ],
+        components: [],
+      },
+    );
+    return;
+  }
+
+  const result = await interviewService.rejectBooking(parsed.bookingId);
+  if (!result.ok) {
+    await editInteractionOriginalMessage(
+      interaction.application_id,
+      interaction.token,
+      {
+        content: `❌ ${result.error ?? "Impossible de refuser cette demande."}`,
+        embeds: [],
+        components: [],
+      },
+    );
+    return;
+  }
+
+  void sendInterviewRejectionDm({
+    userId: booking.user_id,
+    username: booking.username,
+    startsAt,
+  });
+
+  await editInteractionOriginalMessage(
+    interaction.application_id,
+    interaction.token,
+    {
+      embeds: [
+        buildInterviewRequestEmbed({
+          user: player,
+          startsAt,
+          status: "rejected",
+          handledBy: staffUser.username,
+        }),
+      ],
+      components: [],
+    },
+  );
+}
+
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("X-Signature-Ed25519");
   const timestamp = request.headers.get("X-Signature-Timestamp");
   const publicKey = process.env.DISCORD_PUBLIC_KEY ?? "";
   const body = await request.text();
 
+  if (!publicKey) {
+    console.error("DISCORD_PUBLIC_KEY manquant sur Vercel.");
+    return new NextResponse("Interaction endpoint not configured", {
+      status: 500,
+    });
+  }
+
   if (!verifyDiscordRequest(body, signature, timestamp, publicKey)) {
     return new NextResponse("Invalid request signature", { status: 401 });
   }
 
-  const interaction = JSON.parse(body) as DiscordInteraction;
+  let interaction: DiscordInteraction;
+  try {
+    interaction = JSON.parse(body) as DiscordInteraction;
+  } catch {
+    return new NextResponse("Invalid JSON", { status: 400 });
+  }
 
   if (interaction.type === 1) {
     return jsonResponse({ type: 1 });
@@ -101,101 +238,29 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const booking = await interviewService.getBookingById(parsed.bookingId);
-  if (!booking?.interview_slots?.starts_at) {
+  if (!interaction.application_id || !interaction.token) {
     return jsonResponse({
       type: 4,
-      data: { content: "Demande introuvable.", flags: 64 },
+      data: { content: "Interaction Discord incomplète.", flags: 64 },
     });
   }
 
-  const startsAt = booking.interview_slots.starts_at;
-  const player = {
-    id: booking.user_id,
-    username: booking.username,
-  };
-
-  if (booking.status !== "pending") {
-    const statusLabel =
-      booking.status === "confirmed" ? "acceptée" : "refusée ou annulée";
-    return jsonResponse({
-      type: 7,
-      data: {
-        embeds: [
-          buildInterviewRequestEmbed({
-            user: player,
-            startsAt,
-            status: booking.status === "confirmed" ? "accepted" : "rejected",
-          }),
-        ],
-        components: [],
-      },
-    });
-  }
-
-  if (parsed.action === "accept") {
-    const result = await interviewService.acceptBooking(parsed.bookingId);
-    if (!result.ok || !result.booking) {
-      return jsonResponse({
-        type: 4,
-        data: {
-          content: result.error ?? "Impossible d'accepter cette demande.",
-          flags: 64,
+  after(async () => {
+    try {
+      await handleBookingDecision(interaction, parsed, staffUser);
+    } catch (error) {
+      console.error("Erreur traitement interaction entretien:", error);
+      await editInteractionOriginalMessage(
+        interaction.application_id,
+        interaction.token,
+        {
+          content: "❌ Erreur lors du traitement. Réessayez ou utilisez le panel.",
+          embeds: [],
+          components: [],
         },
-      });
+      );
     }
-
-    await sendInterviewAcceptanceDm({
-      userId: booking.user_id,
-      username: booking.username,
-      startsAt,
-    });
-
-    return jsonResponse({
-      type: 7,
-      data: {
-        embeds: [
-          buildInterviewRequestEmbed({
-            user: player,
-            startsAt,
-            status: "accepted",
-            handledBy: staffUser.username,
-          }),
-        ],
-        components: [],
-      },
-    });
-  }
-
-  const result = await interviewService.rejectBooking(parsed.bookingId);
-  if (!result.ok || !result.booking) {
-    return jsonResponse({
-      type: 4,
-      data: {
-        content: result.error ?? "Impossible de refuser cette demande.",
-        flags: 64,
-      },
-    });
-  }
-
-  await sendInterviewRejectionDm({
-    userId: booking.user_id,
-    username: booking.username,
-    startsAt,
   });
 
-  return jsonResponse({
-    type: 7,
-    data: {
-      embeds: [
-        buildInterviewRequestEmbed({
-          user: player,
-          startsAt,
-          status: "rejected",
-          handledBy: staffUser.username,
-        }),
-      ],
-      components: [],
-    },
-  });
+  return jsonResponse({ type: 6 });
 }

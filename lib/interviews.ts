@@ -451,10 +451,17 @@ export const interviewService = {
       .from("interview_bookings")
       .select("*, interview_slots(*)")
       .eq("id", bookingId)
-      .eq("status", "pending")
       .maybeSingle();
 
     if (!booking) {
+      return { ok: false, error: "Demande introuvable." };
+    }
+
+    if (booking.status === "confirmed") {
+      return { ok: true, booking };
+    }
+
+    if (booking.status !== "pending") {
       return { ok: false, error: "Demande introuvable ou déjà traitée." };
     }
 
@@ -481,10 +488,17 @@ export const interviewService = {
       .from("interview_bookings")
       .select("*, interview_slots(*)")
       .eq("id", bookingId)
-      .eq("status", "pending")
       .maybeSingle();
 
     if (!booking) {
+      return { ok: false, error: "Demande introuvable." };
+    }
+
+    if (booking.status === "rejected") {
+      return { ok: true, booking };
+    }
+
+    if (booking.status !== "pending") {
       return { ok: false, error: "Demande introuvable ou déjà traitée." };
     }
 

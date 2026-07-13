@@ -442,7 +442,7 @@ export function InterviewBooking({
                             className={`flex-1 h-full py-3 px-4 rounded-md text-sm font-semibold border-2 transition-all ${
                               isSelected
                                 ? "border-white bg-white/10 text-white"
-                                : "border-[#006BFF] text-[#006BFF] bg-transparent hover:bg-[#006BFF]/10"
+                                : "border-white text-white bg-transparent hover:bg-white/10"
                             }`}
                           >
                             {formatSlotTime(slot.starts_at)}

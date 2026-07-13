@@ -83,7 +83,8 @@ export async function sendInterviewCancellationDm(params: {
           "",
           "Nous sommes **désolés du dérangement**. Votre entretien oral ne pourra pas avoir lieu à la date prévue en raison d'un **empêchement** de notre côté.",
           "",
-          "Vous pouvez **reprendre un nouveau créneau** sur le site pour planifier votre entretien. Merci de votre compréhension.",
+          "Vous pouvez **reprendre un nouveau créneau** sur le site pour planifier votre entretien.",
+          "Merci de votre compréhension.",
           "",
         ].join("\n"),
         color: 0x006bff,
@@ -97,6 +98,11 @@ export async function sendInterviewCancellationDm(params: {
             name: "Date initiale",
             value: dateLabel,
             inline: true,
+          },
+          {
+            name: "\u200b",
+            value: "\u200b",
+            inline: false,
           },
           {
             name: "Reprendre un créneau",

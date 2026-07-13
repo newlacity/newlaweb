@@ -1,9 +1,16 @@
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
+const CANCELLATION_EMBED_IMAGE_URL =
+  process.env.INTERVIEW_CANCELLATION_EMBED_IMAGE_URL ??
+  "https://www.newla.online/rejoignez-nous-embed.png";
+
+const WHITELIST_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.newla.online";
+
 async function sendDiscordDirectMessage(
   userId: string,
-  content: string,
+  payload: { content?: string; embeds?: object[] },
 ): Promise<boolean> {
   const token = process.env.DISCORD_BOT_TOKEN;
   if (!token) {
@@ -39,7 +46,7 @@ async function sendDiscordDirectMessage(
           Authorization: `Bot ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(payload),
       },
     );
 
@@ -68,19 +75,43 @@ export async function sendInterviewCancellationDm(params: {
   const slotTime = format(parseISO(startsAt), "HH:mm", { locale: fr });
   const dateLabel = slotDate.charAt(0).toUpperCase() + slotDate.slice(1);
 
-  const content = [
-    `Bonjour **${username}**,`,
-    "",
-    "Nous sommes désolés du dérangement. Votre entretien oral prévu ne pourra pas avoir lieu en raison d'un empêchement de notre côté.",
-    "",
-    `**Date initiale :** ${dateLabel}`,
-    `**Heure :** ${slotTime}`,
-    "",
-    "Merci de reprendre un nouveau créneau sur le site pour planifier votre entretien.",
-    "",
-    "Cordialement,",
-    "**L'équipe NEW LA CITY**",
-  ].join("\n");
-
-  return sendDiscordDirectMessage(userId, content);
+  return sendDiscordDirectMessage(userId, {
+    embeds: [
+      {
+        title: "Annulation de votre entretien oral",
+        description: [
+          `Bonjour **${username}**,`,
+          "",
+          "Nous sommes **désolés du dérangement**. Votre entretien oral ne pourra pas avoir lieu à la date prévue en raison d'un **empêchement** de notre côté.",
+          "",
+          "Merci de **reprendre un nouveau créneau** sur le site pour planifier votre entretien.",
+        ].join("\n"),
+        color: 0x006bff,
+        fields: [
+          {
+            name: "Date initiale",
+            value: dateLabel,
+            inline: true,
+          },
+          {
+            name: "Heure",
+            value: `${slotTime} · 30 min`,
+            inline: true,
+          },
+          {
+            name: "Reprendre un créneau",
+            value: `[Accéder à la whitelist](${WHITELIST_URL}/whitelist)`,
+            inline: false,
+          },
+        ],
+        image: {
+          url: CANCELLATION_EMBED_IMAGE_URL,
+        },
+        footer: {
+          text: "Cordialement, l'équipe NEW LA CITY",
+        },
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  });
 }

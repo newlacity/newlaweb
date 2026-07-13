@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getDiscordUserFromRequest,
-  hasInterviewAdminRole,
+  checkInterviewAdminFromRequest,
 } from "@/lib/discord-staff";
 import { interviewService } from "@/lib/interviews";
 
@@ -9,14 +8,15 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const user = getDiscordUserFromRequest(request);
-  if (!user) {
+  const check = await checkInterviewAdminFromRequest(request);
+  if (!check.user) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
-
-  const isAdmin = await hasInterviewAdminRole(user.id);
-  if (!isAdmin) {
-    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  if (!check.isAdmin) {
+    return NextResponse.json(
+      { error: check.reason ?? "Accès refusé", needsReauth: check.needsReauth },
+      { status: 403 },
+    );
   }
 
   const bookings = await interviewService.getAllBookings();
@@ -24,14 +24,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = getDiscordUserFromRequest(request);
-  if (!user) {
+  const check = await checkInterviewAdminFromRequest(request);
+  if (!check.user) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
-
-  const isAdmin = await hasInterviewAdminRole(user.id);
-  if (!isAdmin) {
-    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  if (!check.isAdmin) {
+    return NextResponse.json(
+      { error: check.reason ?? "Accès refusé", needsReauth: check.needsReauth },
+      { status: 403 },
+    );
   }
 
   const bookingId = request.nextUrl.searchParams.get("bookingId");

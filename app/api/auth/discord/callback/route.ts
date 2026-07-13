@@ -82,6 +82,18 @@ export async function GET(request: NextRequest) {
     })
 
     response.cookies.set(
+      'discord_access_token',
+      tokenData.access_token,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      }
+    )
+
+    response.cookies.set(
       'discord_user',
       JSON.stringify({
         id: userData.id,

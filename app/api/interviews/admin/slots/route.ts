@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  checkInterviewAdmin,
-  getDiscordUserFromRequest,
+  checkInterviewAdminFromRequest,
 } from "@/lib/discord-staff";
 import { interviewService } from "@/lib/interviews";
 import { getUpcomingBookableDates } from "@/lib/interview-schedule";
@@ -10,22 +9,24 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 async function requireAdmin(request: NextRequest) {
-  const user = getDiscordUserFromRequest(request);
-  if (!user) {
+  const check = await checkInterviewAdminFromRequest(request);
+  if (!check.user) {
     return {
       error: NextResponse.json({ error: "Non authentifié" }, { status: 401 }),
     };
   }
-  const check = await checkInterviewAdmin(user.id);
   if (!check.isAdmin) {
     return {
       error: NextResponse.json(
-        { error: check.reason ?? "Accès refusé" },
+        {
+          error: check.reason ?? "Accès refusé",
+          needsReauth: check.needsReauth,
+        },
         { status: 403 },
       ),
     };
   }
-  return { user };
+  return { user: check.user };
 }
 
 export async function GET(request: NextRequest) {

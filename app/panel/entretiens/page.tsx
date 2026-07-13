@@ -69,6 +69,7 @@ export default function PanelEntretiensPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminReason, setAdminReason] = useState<string | null>(null);
+  const [needsReauth, setNeedsReauth] = useState(false);
   const [tab, setTab] = useState<Tab>("slots");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [slots, setSlots] = useState<SlotWithBooking[]>([]);
@@ -97,6 +98,7 @@ export default function PanelEntretiensPage() {
       if (!data.isAdmin && data.reason) {
         setAdminReason(data.reason);
       }
+      setNeedsReauth(Boolean(data.needsReauth));
     }
     setLoading(false);
   }, []);
@@ -248,9 +250,31 @@ export default function PanelEntretiensPage() {
         <div className="max-w-md text-center">
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Accès refusé</h1>
-          <p className="text-white/60 text-sm">
+          <p className="text-white/60 text-sm mb-6">
             {adminReason ??
               "Vous devez posséder le rôle staff autorisé sur Discord pour accéder à ce panel."}
+          </p>
+          {needsReauth && (
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/api/auth/discord";
+              }}
+              className="inline-block bg-[#006BFF] text-white py-2.5 px-6 rounded-lg font-medium hover:bg-[#0052CC]"
+            >
+              Reconnecter Discord
+            </button>
+          )}
+          {!needsReauth && (
+            <a
+              href="/api/auth/discord"
+              className="inline-block bg-[#006BFF] text-white py-2.5 px-6 rounded-lg font-medium hover:bg-[#0052CC]"
+            >
+              Se connecter avec Discord
+            </a>
+          )}
+          <p className="text-white/40 text-xs mt-4">
+            Panel staff : /panel/entretiens · Rôle requis : 1430996155415920703
           </p>
         </div>
       </div>
@@ -304,6 +328,46 @@ export default function PanelEntretiensPage() {
 
         {tab === "slots" && (
           <div className="space-y-8">
+            <div className="bg-[#006BFF]/10 border border-[#006BFF]/30 rounded-xl p-6">
+              <h2 className="text-white font-semibold text-lg mb-2">
+                Ajouter des dates
+              </h2>
+              <p className="text-white/60 text-sm mb-4">
+                Génère les créneaux pour plusieurs jours d&apos;un coup (à partir
+                de demain). Sans ça, les joueurs ne voient qu&apos;une seule date.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[7, 14, 21, 30].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => setBulkDays(days)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      bulkDays === days
+                        ? "bg-[#006BFF] text-white"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    {days} jours
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleBulkCreateDates}
+                disabled={bulkCreating || creating}
+                className="w-full bg-[#006BFF] text-white py-3 rounded-lg font-semibold hover:bg-[#0052CC] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {bulkCreating && <Loader2 className="w-4 h-4 animate-spin" />}
+                Ajouter les créneaux pour {bulkDays} jours
+              </button>
+              {message && (
+                <p className="text-green-400 text-sm mt-3">{message}</p>
+              )}
+              {error && (
+                <p className="text-red-400 text-sm mt-3">{error}</p>
+              )}
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                 <h2 className="text-white font-medium mb-4">Choisir une date</h2>
@@ -367,47 +431,6 @@ export default function PanelEntretiensPage() {
                   <p className="text-red-400 text-sm mt-3">{error}</p>
                 )}
               </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-              <h2 className="text-white font-medium mb-2">
-                Ajouter des dates
-              </h2>
-              <p className="text-white/50 text-sm mb-4">
-                Génère automatiquement les créneaux pour plusieurs jours à
-                partir de demain. Les joueurs ne verront que les dates où des
-                créneaux existent en base.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {[7, 14, 21, 30].map((days) => (
-                  <button
-                    key={days}
-                    type="button"
-                    onClick={() => setBulkDays(days)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      bulkDays === days
-                        ? "bg-[#006BFF] text-white"
-                        : "bg-white/10 text-white hover:bg-white/20"
-                    }`}
-                  >
-                    {days} jours
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={handleBulkCreateDates}
-                disabled={bulkCreating || creating}
-                className="w-full bg-white/10 border border-[#006BFF]/50 text-white py-2.5 rounded-lg font-medium hover:bg-[#006BFF]/20 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {bulkCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-                Ajouter les créneaux pour {bulkDays} jours
-              </button>
-              {message && (
-                <p className="text-green-400 text-sm mt-3">{message}</p>
-              )}
-              {error && (
-                <p className="text-red-400 text-sm mt-3">{error}</p>
-              )}
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-6">

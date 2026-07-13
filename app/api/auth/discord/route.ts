@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     client_id: DISCORD_CLIENT_ID!,
     redirect_uri: DISCORD_REDIRECT_URI,
     response_type: 'code',
-    scope: 'identify',
+    scope: 'identify guilds.members.read',
     state: state
   })
 

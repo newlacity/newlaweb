@@ -73,9 +73,9 @@ export function buildInterviewRequestEmbed(params: {
   user: InterviewWebhookUser;
   startsAt: string;
   status: "pending" | "accepted" | "rejected";
-  handledBy?: string;
+  handledById?: string;
 }) {
-  const { user, startsAt, status, handledBy } = params;
+  const { user, startsAt, status, handledById } = params;
 
   const discriminator =
     user.discriminator && user.discriminator !== "0"
@@ -110,13 +110,13 @@ export function buildInterviewRequestEmbed(params: {
       : status === "accepted"
         ? [
             "La demande d'entretien a été **acceptée**.",
-            handledBy ? `Traité par **${handledBy}**` : "",
+            handledById ? `Traité par <@${handledById}>` : "",
           ]
             .filter(Boolean)
             .join("\n")
         : [
             "La demande d'entretien a été **refusée**.",
-            handledBy ? `Traité par **${handledBy}**` : "",
+            handledById ? `Traité par <@${handledById}>` : "",
           ]
             .filter(Boolean)
             .join("\n");

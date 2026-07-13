@@ -61,6 +61,23 @@ function parseBookingId(customId: string): {
   return null;
 }
 
+function buildInteractionUpdate(
+  embeds: object[],
+  mentionUserIds: string[] = [],
+) {
+  return {
+    type: 7,
+    data: {
+      embeds,
+      components: [] as object[],
+      allowed_mentions: {
+        parse: [] as string[],
+        users: mentionUserIds,
+      },
+    },
+  };
+}
+
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("X-Signature-Ed25519");
   const timestamp = request.headers.get("X-Signature-Timestamp");
@@ -121,19 +138,15 @@ export async function POST(request: NextRequest) {
   };
 
   if (booking.status !== "pending") {
-    return jsonResponse({
-      type: 7,
-      data: {
-        embeds: [
-          buildInterviewRequestEmbed({
-            user: player,
-            startsAt,
-            status: booking.status === "confirmed" ? "accepted" : "rejected",
-          }),
-        ],
-        components: [],
-      },
-    });
+    return jsonResponse(
+      buildInteractionUpdate([
+        buildInterviewRequestEmbed({
+          user: player,
+          startsAt,
+          status: booking.status === "confirmed" ? "accepted" : "rejected",
+        }),
+      ]),
+    );
   }
 
   if (parsed.action === "accept") {
@@ -142,26 +155,33 @@ export async function POST(request: NextRequest) {
       return ephemeral(result.error ?? "Impossible d'accepter cette demande.");
     }
 
-    void sendInterviewAcceptanceDm({
+    const dmSent = await sendInterviewAcceptanceDm({
       userId: booking.user_id,
       username: booking.username,
       startsAt,
     });
 
-    return jsonResponse({
-      type: 7,
-      data: {
-        embeds: [
+    if (!dmSent) {
+      console.error(
+        "MP acceptation non envoyé pour",
+        booking.user_id,
+        booking.username,
+      );
+    }
+
+    return jsonResponse(
+      buildInteractionUpdate(
+        [
           buildInterviewRequestEmbed({
             user: player,
             startsAt,
             status: "accepted",
-            handledBy: staffUser.username,
+            handledById: staffUser.id,
           }),
         ],
-        components: [],
-      },
-    });
+        [staffUser.id],
+      ),
+    );
   }
 
   const result = await interviewService.rejectBooking(parsed.bookingId);
@@ -169,24 +189,31 @@ export async function POST(request: NextRequest) {
     return ephemeral(result.error ?? "Impossible de refuser cette demande.");
   }
 
-  void sendInterviewRejectionDm({
+  const dmSent = await sendInterviewRejectionDm({
     userId: booking.user_id,
     username: booking.username,
     startsAt,
   });
 
-  return jsonResponse({
-    type: 7,
-    data: {
-      embeds: [
+  if (!dmSent) {
+    console.error(
+      "MP refus non envoyé pour",
+      booking.user_id,
+      booking.username,
+    );
+  }
+
+  return jsonResponse(
+    buildInteractionUpdate(
+      [
         buildInterviewRequestEmbed({
           user: player,
           startsAt,
           status: "rejected",
-          handledBy: staffUser.username,
+          handledById: staffUser.id,
         }),
       ],
-      components: [],
-    },
-  });
+      [staffUser.id],
+    ),
+  );
 }

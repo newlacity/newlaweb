@@ -99,11 +99,6 @@ export async function sendInterviewCancellationDm(params: {
             inline: true,
           },
           {
-            name: "\u200b",
-            value: "\u200b",
-            inline: false,
-          },
-          {
             name: "Reprendre un créneau",
             value: [
               `[Accéder à la whitelist](${WHITELIST_URL}/whitelist)`,

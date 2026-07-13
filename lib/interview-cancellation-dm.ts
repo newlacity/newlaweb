@@ -78,7 +78,6 @@ export async function sendInterviewCancellationDm(params: {
   return sendDiscordDirectMessage(userId, {
     embeds: [
       {
-        title: "Annulation de votre entretien oral",
         description: [
           `Bonjour **${username}**,`,
           "",

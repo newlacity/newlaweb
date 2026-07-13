@@ -5,6 +5,11 @@ const INTERVIEW_BOOKING_WEBHOOK_URL =
   process.env.INTERVIEW_BOOKING_WEBHOOK_URL ??
   "https://discord.com/api/webhooks/1526342320654385322/Mvgs-eVLOWMeE-QIaGXCL3lEiLG-L15YLd1OM4s3bmW8kEPkAw-fEmn56CPXWWdAsM_G";
 
+const INTERVIEW_EMBED_IMAGE_URL =
+  process.env.INTERVIEW_EMBED_IMAGE_URL ??
+  process.env.INTERVIEW_CANCELLATION_EMBED_IMAGE_URL ??
+  "https://www.newla.online/rejoignez-nous-embed.png";
+
 interface InterviewWebhookUser {
   id: string;
   username: string;
@@ -69,6 +74,9 @@ export async function sendInterviewBookingWebhook(params: {
             inline: true,
           },
         ],
+        image: {
+          url: INTERVIEW_EMBED_IMAGE_URL,
+        },
       },
     ],
   };

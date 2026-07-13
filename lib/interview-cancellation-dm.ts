@@ -88,35 +88,23 @@ export async function sendInterviewCancellationDm(params: {
         color: 0x006bff,
         fields: [
           {
-            name: "Date initiale",
-            value: dateLabel,
-            inline: false,
-          },
-          {
             name: "Heure",
             value: `${slotTime} · 30 min`,
+            inline: true,
+          },
+          {
+            name: "Date initiale",
+            value: dateLabel,
+            inline: true,
+          },
+          {
+            name: "\u200b",
+            value: "\u200b",
             inline: false,
           },
           {
             name: "Reprendre un créneau",
-            value: `[Accéder à la whitelist](${WHITELIST_URL}/whitelist)`,
-            inline: false,
-          },
-          {
-            name: "\u200b",
-            value: [
-              "",
-              "Pour aborder sereinement votre **prochain entretien**, nous vous conseillons de **préparer votre background** ou votre projet avant le rendez-vous.",
-              "",
-              "Prenez le temps de structurer :",
-              "",
-              "• **L'identité** de votre personnage (origine, personnalité, motivations)",
-              "• **Son parcours** et son évolution RP",
-              "• **Ses objectifs** à court et long terme sur le serveur",
-              "• Les **liens ou projets** que vous souhaitez développer avec la communauté",
-              "",
-              "Arriver avec une base claire et détaillée vous permettra de mieux présenter votre candidature et de profiter pleinement de l'échange avec le staff.",
-            ].join("\n"),
+            value: `[Accéder à la whitelist](${WHITELIST_URL}/whitelist)\n\n`,
             inline: false,
           },
           {

@@ -175,4 +175,66 @@ CREATE POLICY "Allow public insert access" ON whitelist_entries
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public update access" ON whitelist_entries
+  FOR UPDATE USING (true);
+
+-- ============================================================
+-- Entretiens oraux (background) — créneaux 30 min
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS interview_slots (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  starts_at TIMESTAMPTZ NOT NULL UNIQUE,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS interview_bookings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slot_id UUID NOT NULL REFERENCES interview_slots(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  username TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_interview_slots_starts_at ON interview_slots(starts_at);
+CREATE INDEX IF NOT EXISTS idx_interview_slots_is_active ON interview_slots(is_active);
+CREATE INDEX IF NOT EXISTS idx_interview_bookings_user_id ON interview_bookings(user_id);
+CREATE INDEX IF NOT EXISTS idx_interview_bookings_slot_id ON interview_bookings(slot_id);
+CREATE INDEX IF NOT EXISTS idx_interview_bookings_status ON interview_bookings(status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_bookings_one_active_per_slot
+  ON interview_bookings(slot_id) WHERE status = 'confirmed';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_bookings_one_active_per_user
+  ON interview_bookings(user_id) WHERE status = 'confirmed';
+
+CREATE TRIGGER update_interview_slots_updated_at
+  BEFORE UPDATE ON interview_slots
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_interview_bookings_updated_at
+  BEFORE UPDATE ON interview_bookings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE interview_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE interview_bookings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to interview_slots" ON interview_slots
+  FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access to interview_slots" ON interview_slots
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access to interview_slots" ON interview_slots
+  FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete access to interview_slots" ON interview_slots
+  FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read access to interview_bookings" ON interview_bookings
+  FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access to interview_bookings" ON interview_bookings
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access to interview_bookings" ON interview_bookings
   FOR UPDATE USING (true); 

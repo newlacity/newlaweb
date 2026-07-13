@@ -10,6 +10,7 @@ import {
   Trophy,
   LogOut,
 } from "lucide-react";
+import { InterviewBooking } from "@/components/interview-booking";
 
 const quizQuestions = [
   {
@@ -541,42 +542,7 @@ export default function WhitelistPage() {
   }
 
   if (whitelistStatus === "approved") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
-        <div className="max-w-md mx-auto px-6 py-12 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-white mb-4">
-            Whitelist Approuvée !
-          </h1>
-          <p className="text-white/70 mb-6">
-            Félicitations ! Vous avez réussi le quiz RP et obtenu l'accès
-            whitelist.
-          </p>
-          <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
-            <p className="text-green-400 text-sm">
-              Le rôle « Quizz validé » a été ajouté à votre compte Discord.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <button
-              onClick={() =>
-                (window.location.href = "https://discord.gg/newlacity")
-              }
-              className="w-full bg-white text-black py-3 px-6 rounded-lg font-medium hover:bg-white/90 transition-colors duration-300"
-            >
-              Rejoindre le Discord
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full bg-white/10 text-white py-3 px-6 rounded-lg font-medium hover:bg-white/20 transition-colors duration-300 flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Se déconnecter
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <InterviewBooking onLogout={handleLogout} />;
   }
 
   if (whitelistStatus === "failed") {
@@ -614,6 +580,12 @@ export default function WhitelistPage() {
   }
 
   if (quizCompleted) {
+    if (score >= 30) {
+      return (
+        <InterviewBooking showSuccessBanner onLogout={handleLogout} />
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
         <div className="max-w-md mx-auto px-6 py-12 text-center">
@@ -623,21 +595,12 @@ export default function WhitelistPage() {
             Votre score :{" "}
             <span className="text-white font-bold">{score}/40</span>
           </p>
-          {score >= 30 ? (
-            <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
-              <p className="text-green-400 text-sm">
-                Félicitations ! Vous avez réussi le quiz. Le rôle « Quizz validé »
-                va être ajouté à votre compte Discord.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6">
-              <p className="text-red-400 text-sm">
-                Score insuffisant. Vous devez obtenir au moins 30/40 pour
-                passer.
-              </p>
-            </div>
-          )}
+          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6">
+            <p className="text-red-400 text-sm">
+              Score insuffisant. Vous devez obtenir au moins 30/40 pour
+              passer.
+            </p>
+          </div>
           <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}

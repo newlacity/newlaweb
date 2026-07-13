@@ -37,7 +37,7 @@ export async function sendInterviewAcceptanceDm(params: {
           "",
           "Bonne nouvelle ! Votre **demande d'entretien oral** a été **acceptée** par notre équipe.",
           "",
-          "Nous vous attendons à l'horaire convenu sur le salon vocal Discord. Pensez à **préparer votre background** ou votre projet avant le rendez-vous.",
+          "Nous vous attendons à l'horaire convenu sur le salon vocal Discord.",
         ].join("\n"),
         color: 0x22c55e,
         fields: [
@@ -50,6 +50,14 @@ export async function sendInterviewAcceptanceDm(params: {
             name: "Date",
             value: dateLabel,
             inline: true,
+          },
+          {
+            name: "\u200b",
+            value: [
+              "",
+              "Pensez à **préparer votre background** ou votre projet avant le rendez-vous.",
+            ].join("\n"),
+            inline: false,
           },
           {
             name: "\u200b",

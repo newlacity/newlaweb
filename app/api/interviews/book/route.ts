@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     result.startsAt ?? result.booking.interview_slots?.starts_at;
   if (startsAt) {
     await sendInterviewBookingWebhook({
+      bookingId: result.booking.id,
       user: {
         id: user.id,
         username: user.username,

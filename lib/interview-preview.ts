@@ -28,6 +28,7 @@ export function getPreviewBooking(startsAt: string) {
     id: "preview-booking",
     slot_id: "preview-slot",
     username: "JoueurDemo",
+    status: "pending" as const,
     interview_slots: { starts_at: startsAt },
   };
 }

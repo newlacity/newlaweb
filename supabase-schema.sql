@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS interview_bookings (
   slot_id UUID NOT NULL REFERENCES interview_slots(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   username TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'rejected')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -207,10 +207,10 @@ CREATE INDEX IF NOT EXISTS idx_interview_bookings_slot_id ON interview_bookings(
 CREATE INDEX IF NOT EXISTS idx_interview_bookings_status ON interview_bookings(status);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_bookings_one_active_per_slot
-  ON interview_bookings(slot_id) WHERE status = 'confirmed';
+  ON interview_bookings(slot_id) WHERE status IN ('pending', 'confirmed');
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_bookings_one_active_per_user
-  ON interview_bookings(user_id) WHERE status = 'confirmed';
+  ON interview_bookings(user_id) WHERE status IN ('pending', 'confirmed');
 
 CREATE TRIGGER update_interview_slots_updated_at
   BEFORE UPDATE ON interview_slots

@@ -20,16 +20,27 @@ export interface InterviewSlot {
   updated_at: string;
 }
 
+export type InterviewBookingStatus =
+  | "pending"
+  | "confirmed"
+  | "cancelled"
+  | "rejected";
+
 export interface InterviewBooking {
   id: string;
   slot_id: string;
   user_id: string;
   username: string;
-  status: "confirmed" | "cancelled";
+  status: InterviewBookingStatus;
   created_at: string;
   updated_at: string;
   interview_slots?: InterviewSlot;
 }
+
+const ACTIVE_BOOKING_STATUSES: InterviewBookingStatus[] = [
+  "pending",
+  "confirmed",
+];
 
 export interface SlotWithBooking extends InterviewSlot {
   booking: InterviewBooking | null;
@@ -85,7 +96,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
         slots.map((s) => s.id),
@@ -121,7 +132,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
         slots.map((s) => s.id),
@@ -148,7 +159,7 @@ export const interviewService = {
       .from("interview_bookings")
       .select("*, interview_slots(*)")
       .eq("user_id", userId)
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -202,7 +213,7 @@ export const interviewService = {
       .from("interview_bookings")
       .select("id")
       .eq("slot_id", slotId)
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .maybeSingle();
 
     if (taken) {
@@ -211,7 +222,7 @@ export const interviewService = {
 
     const { data: booking, error } = await supabase
       .from("interview_bookings")
-      .insert([{ slot_id: slotId, user_id: userId, username, status: "confirmed" }])
+      .insert([{ slot_id: slotId, user_id: userId, username, status: "pending" }])
       .select("*, interview_slots(*)")
       .single();
 
@@ -322,7 +333,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("*")
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
         slots.map((s) => s.id),
@@ -351,7 +362,7 @@ export const interviewService = {
       .from("interview_bookings")
       .select("id")
       .eq("slot_id", slotId)
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .maybeSingle();
 
     if (booking) {
@@ -388,7 +399,7 @@ export const interviewService = {
     const { data, error } = await supabase
       .from("interview_bookings")
       .select("*, interview_slots(*)")
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -411,7 +422,7 @@ export const interviewService = {
       .from("interview_bookings")
       .select("*, interview_slots(*)")
       .eq("id", bookingId)
-      .eq("status", "confirmed")
+      .in("status", ACTIVE_BOOKING_STATUSES)
       .maybeSingle();
 
     if (!booking) {
@@ -425,5 +436,80 @@ export const interviewService = {
 
     if (error) return { ok: false, error: "Erreur lors de l'annulation." };
     return { ok: true, booking };
+  },
+
+  async acceptBooking(
+    bookingId: string,
+  ): Promise<{
+    ok: boolean;
+    error?: string;
+    booking?: InterviewBooking;
+  }> {
+    const supabase = getSupabase();
+
+    const { data: booking } = await supabase
+      .from("interview_bookings")
+      .select("*, interview_slots(*)")
+      .eq("id", bookingId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (!booking) {
+      return { ok: false, error: "Demande introuvable ou déjà traitée." };
+    }
+
+    const { error } = await supabase
+      .from("interview_bookings")
+      .update({ status: "confirmed" })
+      .eq("id", bookingId)
+      .eq("status", "pending");
+
+    if (error) return { ok: false, error: "Erreur lors de l'acceptation." };
+    return { ok: true, booking: { ...booking, status: "confirmed" } };
+  },
+
+  async rejectBooking(
+    bookingId: string,
+  ): Promise<{
+    ok: boolean;
+    error?: string;
+    booking?: InterviewBooking;
+  }> {
+    const supabase = getSupabase();
+
+    const { data: booking } = await supabase
+      .from("interview_bookings")
+      .select("*, interview_slots(*)")
+      .eq("id", bookingId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (!booking) {
+      return { ok: false, error: "Demande introuvable ou déjà traitée." };
+    }
+
+    const { error } = await supabase
+      .from("interview_bookings")
+      .update({ status: "rejected" })
+      .eq("id", bookingId)
+      .eq("status", "pending");
+
+    if (error) return { ok: false, error: "Erreur lors du refus." };
+    return { ok: true, booking: { ...booking, status: "rejected" } };
+  },
+
+  async getBookingById(bookingId: string): Promise<InterviewBooking | null> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("interview_bookings")
+      .select("*, interview_slots(*)")
+      .eq("id", bookingId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("getBookingById:", error);
+      return null;
+    }
+    return data;
   },
 };

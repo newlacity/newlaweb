@@ -42,13 +42,19 @@ interface SlotWithBooking {
   id: string;
   starts_at: string;
   is_active: boolean;
-  booking: { id: string; username: string; user_id: string } | null;
+  booking: {
+    id: string;
+    username: string;
+    user_id: string;
+    status?: string;
+  } | null;
 }
 
 interface BookingRow {
   id: string;
   username: string;
   user_id: string;
+  status?: string;
   interview_slots?: { starts_at: string };
 }
 
@@ -485,8 +491,17 @@ export default function PanelEntretiensPage() {
                           {format(parseISO(slot.starts_at), "HH:mm")} — 30 min
                         </span>
                         {slot.booking ? (
-                          <span className="text-green-400 text-xs block truncate mt-0.5">
-                            Réservé · {slot.booking.username}
+                          <span
+                            className={`text-xs block truncate mt-0.5 ${
+                              slot.booking.status === "pending"
+                                ? "text-amber-400"
+                                : "text-green-400"
+                            }`}
+                          >
+                            {slot.booking.status === "pending"
+                              ? "En attente"
+                              : "Confirmé"}{" "}
+                            · {slot.booking.username}
                           </span>
                         ) : (
                           <span className="text-white/40 text-xs block mt-0.5">
@@ -533,6 +548,7 @@ export default function PanelEntretiensPage() {
                         {b.interview_slots?.starts_at
                           ? formatSlot(b.interview_slots.starts_at)
                           : "—"}
+                        {b.status === "pending" ? " · En attente" : ""}
                       </p>
                       <p className="text-white/30 text-xs">ID: {b.user_id}</p>
                     </div>

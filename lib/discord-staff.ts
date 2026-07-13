@@ -27,6 +27,14 @@ function memberHasAdminRole(
   return adminRoleIds.some((roleId) => memberRoles.includes(roleId));
 }
 
+export function isDiscordInterviewStaff(
+  userId: string,
+  memberRoles: string[] = [],
+): boolean {
+  if (getAdminDiscordIds().includes(userId)) return true;
+  return memberHasAdminRole(memberRoles, getInterviewAdminRoleIds());
+}
+
 export interface AdminCheckResult {
   isAdmin: boolean;
   reason?: string;

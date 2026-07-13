@@ -21,6 +21,7 @@ interface InterviewBooking {
   id: string;
   slot_id: string;
   username: string;
+  status?: "pending" | "confirmed" | "cancelled" | "rejected";
   interview_slots?: { starts_at: string };
 }
 
@@ -220,6 +221,7 @@ export function InterviewBooking({
 
   if (booking?.interview_slots?.starts_at) {
     const startsAt = booking.interview_slots.starts_at;
+    const isPending = booking.status === "pending";
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md bg-neutral-900/80 backdrop-blur rounded-xl shadow-2xl border border-white/10 overflow-hidden">
@@ -232,10 +234,12 @@ export function InterviewBooking({
               <CalendarCheck className="w-7 h-7" style={{ color: ACCENT }} />
             </div>
             <h2 className="text-xl font-bold text-white mb-1">
-              Vous êtes inscrit !
+              {isPending ? "Demande envoyée !" : "Vous êtes inscrit !"}
             </h2>
             <p className="text-white/50 text-sm">
-              Votre entretien oral background est confirmé.
+              {isPending
+                ? "Votre demande d'entretien est en attente de validation par le staff."
+                : "Votre entretien oral background est confirmé."}
             </p>
           </div>
           <div className="px-8 py-6 space-y-4">
@@ -252,18 +256,21 @@ export function InterviewBooking({
               </p>
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
-              Rejoignez le salon vocal Discord à l&apos;heure indiquée. Un
-              membre du staff vous attendra pour votre entretien.
+              {isPending
+                ? "Vous recevrez un message Discord dès que votre créneau sera accepté ou refusé par l'équipe."
+                : "Rejoignez le salon vocal Discord à l'heure indiquée. Un membre du staff vous attendra pour votre entretien."}
             </p>
-            <button
-              onClick={() =>
-                (window.location.href = "https://discord.gg/newlacity")
-              }
-              className="w-full text-white py-3 px-6 rounded-full font-semibold hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: ACCENT }}
-            >
-              Rejoindre le Discord
-            </button>
+            {!isPending && (
+              <button
+                onClick={() =>
+                  (window.location.href = "https://discord.gg/newlacity")
+                }
+                className="w-full text-white py-3 px-6 rounded-full font-semibold hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Rejoindre le Discord
+              </button>
+            )}
             {onLogout && (
               <button
                 onClick={onLogout}

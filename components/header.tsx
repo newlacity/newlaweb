@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { ChevronDown } from "lucide-react";
+import { InterviewAdminNavLink } from "@/components/interview-admin-nav-link";
 
 export function Header() {
   const pathname = usePathname();
@@ -213,6 +214,8 @@ export function Header() {
                   </div>
                 )}
               </div>
+
+              <InterviewAdminNavLink />
             </nav>
 
             <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
@@ -318,6 +321,11 @@ export function Header() {
                 </Link>
               </div>
             </div>
+
+            <InterviewAdminNavLink
+              className="flex items-center space-x-4 text-[#006BFF] text-lg font-light p-3 rounded-lg hover:bg-[#006BFF]/10"
+              onNavigate={() => setIsMenuOpen(false)}
+            />
 
             {/* Règlement Mobile */}
             <div className="space-y-2">

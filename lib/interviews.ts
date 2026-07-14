@@ -1,6 +1,7 @@
 import { getSupabase } from "./supabase";
 import {
   getParisCalendarDate,
+  getParisUtcOffset,
   getScheduledSlotStartsForDate,
   getTodayParisDateString,
   isBookableCalendarDate,
@@ -60,6 +61,24 @@ export function parseInterviewSlotKind(value: string | null | undefined): Interv
   return "whitelist";
 }
 
+function getDayBounds(from: string, to: string) {
+  const startOffset = getParisUtcOffset(from);
+  const endOffset = getParisUtcOffset(to);
+  return {
+    dayStart: `${from}T00:00:00${startOffset}`,
+    dayEnd: `${to}T23:59:59${endOffset}`,
+  };
+}
+
+function pickActiveBooking(
+  bookings: InterviewBooking[] | null | undefined,
+): InterviewBooking | null {
+  if (!bookings?.length) return null;
+  return (
+    bookings.find((b) => ACTIVE_BOOKING_STATUSES.includes(b.status)) ?? null
+  );
+}
+
 function parseTimeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
@@ -114,7 +133,6 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
-      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
@@ -154,7 +172,6 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
-      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
@@ -373,34 +390,44 @@ export const interviewService = {
     kind: InterviewSlotKind = "whitelist",
   ): Promise<SlotWithBooking[]> {
     const supabase = getSupabase();
+    const { dayStart, dayEnd } = getDayBounds(from, to);
+
     const { data: slots, error } = await supabase
       .from("interview_slots")
-      .select("*")
+      .select(
+        `
+        *,
+        interview_bookings (
+          id,
+          user_id,
+          username,
+          status,
+          booking_kind,
+          slot_id
+        )
+      `,
+      )
       .eq("slot_kind", kind)
-      .gte("starts_at", `${from}T00:00:00`)
-      .lte("starts_at", `${to}T23:59:59`)
+      .gte("starts_at", dayStart)
+      .lte("starts_at", dayEnd)
       .order("starts_at", { ascending: true });
 
-    if (error || !slots) return [];
+    if (error || !slots) {
+      if (error) console.error("getAdminSlots:", error);
+      return [];
+    }
 
-    const { data: bookings } = await supabase
-      .from("interview_bookings")
-      .select("*")
-      .eq("booking_kind", kind)
-      .in("status", ACTIVE_BOOKING_STATUSES)
-      .in(
-        "slot_id",
-        slots.map((s) => s.id),
-      );
+    type SlotRow = InterviewSlot & {
+      interview_bookings?: InterviewBooking[];
+    };
 
-    const bookingBySlot = new Map(
-      bookings?.map((b) => [b.slot_id, b]) ?? [],
-    );
-
-    const withBookings = slots.map((slot) => ({
-      ...slot,
-      booking: bookingBySlot.get(slot.id) ?? null,
-    }));
+    const withBookings = (slots as SlotRow[]).map((slot) => {
+      const { interview_bookings, ...rest } = slot;
+      return {
+        ...rest,
+        booking: pickActiveBooking(interview_bookings),
+      };
+    });
     const order = sortSlotsForDisplay(withBookings.map((s) => s.starts_at));
     const orderIndex = new Map(order.map((t, i) => [t, i]));
     return withBookings.sort(

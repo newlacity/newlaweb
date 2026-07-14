@@ -522,15 +522,13 @@ export default function PanelEntretiensPage() {
                       <div className="min-w-0 flex-1">
                         <span className="text-white text-sm block">
                           {format(parseISO(slot.starts_at), "HH:mm")} — 30 min
+                          <span className="text-white/40"> · </span>
                           {slot.booking ? (
-                            <>
-                              <span className="text-white/40"> · </span>
-                              <span className="text-white font-medium">
-                                {slot.booking.username}
-                              </span>
-                            </>
+                            <span className="text-white font-medium">
+                              {slot.booking.username || "Joueur"}
+                            </span>
                           ) : (
-                            <span className="text-white/40"> · Libre</span>
+                            <span className="text-white/40">Libre</span>
                           )}
                         </span>
                         {slot.booking && (

@@ -25,7 +25,7 @@ export function getParisCalendarDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-function getParisUtcOffset(dateStr: string): string {
+export function getParisUtcOffset(dateStr: string): string {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Paris",
     timeZoneName: "shortOffset",

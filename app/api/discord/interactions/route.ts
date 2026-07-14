@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyDiscordRequest } from "@/lib/discord-verify";
-import { isDiscordInterviewStaff } from "@/lib/discord-staff";
+import {
+  isDiscordInterviewStaff,
+  isDiscordStaffManager,
+} from "@/lib/discord-staff";
 import {
   sendInterviewAcceptanceDm,
   sendInterviewRejectionDm,
@@ -10,7 +13,16 @@ import {
   INTERVIEW_ACCEPT_PREFIX,
   INTERVIEW_REJECT_PREFIX,
 } from "@/lib/interview-webhook";
-import { interviewService } from "@/lib/interviews";
+import {
+  sendStaffAcceptanceDm,
+  sendStaffRejectionDm,
+} from "@/lib/staff-interview-booking-dm";
+import {
+  buildStaffRequestEmbed,
+  STAFF_ACCEPT_PREFIX,
+  STAFF_REJECT_PREFIX,
+} from "@/lib/staff-interview-webhook";
+import { interviewService, InterviewBookingKind } from "@/lib/interviews";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,19 +55,36 @@ function ephemeral(content: string) {
 }
 
 function parseBookingId(customId: string): {
+  kind: InterviewBookingKind;
   action: "accept" | "reject";
   bookingId: string;
 } | null {
   if (customId.startsWith(INTERVIEW_ACCEPT_PREFIX)) {
     return {
+      kind: "whitelist",
       action: "accept",
       bookingId: customId.slice(INTERVIEW_ACCEPT_PREFIX.length),
     };
   }
   if (customId.startsWith(INTERVIEW_REJECT_PREFIX)) {
     return {
+      kind: "whitelist",
       action: "reject",
       bookingId: customId.slice(INTERVIEW_REJECT_PREFIX.length),
+    };
+  }
+  if (customId.startsWith(STAFF_ACCEPT_PREFIX)) {
+    return {
+      kind: "staff",
+      action: "accept",
+      bookingId: customId.slice(STAFF_ACCEPT_PREFIX.length),
+    };
+  }
+  if (customId.startsWith(STAFF_REJECT_PREFIX)) {
+    return {
+      kind: "staff",
+      action: "reject",
+      bookingId: customId.slice(STAFF_REJECT_PREFIX.length),
     };
   }
   return null;
@@ -76,6 +105,21 @@ function buildInteractionUpdate(
       },
     },
   };
+}
+
+function buildEmbedForKind(
+  kind: InterviewBookingKind,
+  params: {
+    user: { id: string; username: string };
+    startsAt: string;
+    status: "pending" | "accepted" | "rejected";
+    handledById?: string;
+  },
+) {
+  if (kind === "staff") {
+    return buildStaffRequestEmbed(params);
+  }
+  return buildInterviewRequestEmbed(params);
 }
 
 export async function POST(request: NextRequest) {
@@ -117,18 +161,28 @@ export async function POST(request: NextRequest) {
   }
 
   const staffRoles = interaction.member?.roles ?? [];
-  if (!isDiscordInterviewStaff(staffUser.id, staffRoles)) {
-    return ephemeral("Vous n'avez pas la permission de traiter cette demande.");
-  }
-
   const parsed = parseBookingId(interaction.data.custom_id);
   if (!parsed?.bookingId) {
     return ephemeral("Bouton invalide.");
   }
 
+  const hasPermission =
+    parsed.kind === "staff"
+      ? isDiscordStaffManager(staffUser.id, staffRoles)
+      : isDiscordInterviewStaff(staffUser.id, staffRoles);
+
+  if (!hasPermission) {
+    return ephemeral("Vous n'avez pas la permission de traiter cette demande.");
+  }
+
   const booking = await interviewService.getBookingById(parsed.bookingId);
   if (!booking?.interview_slots?.starts_at) {
     return ephemeral("Demande introuvable.");
+  }
+
+  const bookingKind = booking.booking_kind ?? "whitelist";
+  if (bookingKind !== parsed.kind) {
+    return ephemeral("Type de demande invalide.");
   }
 
   const startsAt = booking.interview_slots.starts_at;
@@ -140,7 +194,7 @@ export async function POST(request: NextRequest) {
   if (booking.status !== "pending") {
     return jsonResponse(
       buildInteractionUpdate([
-        buildInterviewRequestEmbed({
+        buildEmbedForKind(parsed.kind, {
           user: player,
           startsAt,
           status: booking.status === "confirmed" ? "accepted" : "rejected",
@@ -155,11 +209,18 @@ export async function POST(request: NextRequest) {
       return ephemeral(result.error ?? "Impossible d'accepter cette demande.");
     }
 
-    const dmSent = await sendInterviewAcceptanceDm({
-      userId: booking.user_id,
-      username: booking.username,
-      startsAt,
-    });
+    const dmSent =
+      parsed.kind === "staff"
+        ? await sendStaffAcceptanceDm({
+            userId: booking.user_id,
+            username: booking.username,
+            startsAt,
+          })
+        : await sendInterviewAcceptanceDm({
+            userId: booking.user_id,
+            username: booking.username,
+            startsAt,
+          });
 
     if (!dmSent) {
       console.error(
@@ -172,7 +233,7 @@ export async function POST(request: NextRequest) {
     return jsonResponse(
       buildInteractionUpdate(
         [
-          buildInterviewRequestEmbed({
+          buildEmbedForKind(parsed.kind, {
             user: player,
             startsAt,
             status: "accepted",
@@ -189,11 +250,18 @@ export async function POST(request: NextRequest) {
     return ephemeral(result.error ?? "Impossible de refuser cette demande.");
   }
 
-  const dmSent = await sendInterviewRejectionDm({
-    userId: booking.user_id,
-    username: booking.username,
-    startsAt,
-  });
+  const dmSent =
+    parsed.kind === "staff"
+      ? await sendStaffRejectionDm({
+          userId: booking.user_id,
+          username: booking.username,
+          startsAt,
+        })
+      : await sendInterviewRejectionDm({
+          userId: booking.user_id,
+          username: booking.username,
+          startsAt,
+        });
 
   if (!dmSent) {
     console.error(
@@ -206,7 +274,7 @@ export async function POST(request: NextRequest) {
   return jsonResponse(
     buildInteractionUpdate(
       [
-        buildInterviewRequestEmbed({
+        buildEmbedForKind(parsed.kind, {
           user: player,
           startsAt,
           status: "rejected",

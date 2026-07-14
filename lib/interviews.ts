@@ -26,12 +26,15 @@ export type InterviewBookingStatus =
   | "cancelled"
   | "rejected";
 
+export type InterviewBookingKind = "whitelist" | "staff";
+
 export interface InterviewBooking {
   id: string;
   slot_id: string;
   user_id: string;
   username: string;
   status: InterviewBookingStatus;
+  booking_kind: InterviewBookingKind;
   created_at: string;
   updated_at: string;
   interview_slots?: InterviewSlot;
@@ -153,12 +156,16 @@ export const interviewService = {
     return Array.from(dates).sort();
   },
 
-  async getUserBooking(userId: string): Promise<InterviewBooking | null> {
+  async getUserBooking(
+    userId: string,
+    kind: InterviewBookingKind = "whitelist",
+  ): Promise<InterviewBooking | null> {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from("interview_bookings")
       .select("*, interview_slots(*)")
       .eq("user_id", userId)
+      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -175,6 +182,7 @@ export const interviewService = {
     userId: string,
     username: string,
     slotId: string,
+    kind: InterviewBookingKind = "whitelist",
   ): Promise<{
     booking: InterviewBooking | null;
     startsAt?: string;
@@ -182,7 +190,7 @@ export const interviewService = {
   }> {
     const supabase = getSupabase();
 
-    const existing = await this.getUserBooking(userId);
+    const existing = await this.getUserBooking(userId, kind);
     if (existing) {
       return { booking: null, error: "Vous avez déjà un entretien réservé." };
     }
@@ -222,7 +230,15 @@ export const interviewService = {
 
     const { data: booking, error } = await supabase
       .from("interview_bookings")
-      .insert([{ slot_id: slotId, user_id: userId, username, status: "pending" }])
+      .insert([
+        {
+          slot_id: slotId,
+          user_id: userId,
+          username,
+          status: "pending",
+          booking_kind: kind,
+        },
+      ])
       .select("*, interview_slots(*)")
       .single();
 

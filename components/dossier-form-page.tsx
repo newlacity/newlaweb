@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Shield, User, Briefcase, FileText, Send, MapPin, Pill, Building2, Coins } from "lucide-react";
+import { InterviewBooking } from "@/components/interview-booking";
 import {
   DOSSIER_SHORT_INPUT_MAX_LENGTH,
   DOSSIER_TEXTAREA_MAX_LENGTH,
@@ -71,6 +72,25 @@ export function DossierFormPage({
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (type !== "staff" || !isLoggedIn) return;
+
+    const checkDossier = async () => {
+      try {
+        const res = await fetch("/api/staff-interviews/dossier-status", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { submitted?: boolean };
+          if (data.submitted) setSubmitted(true);
+        }
+      } catch (error) {
+        console.error("Erreur dossier staff:", error);
+      }
+    };
+    checkDossier();
+  }, [type, isLoggedIn]);
+
   const handleDiscordLogin = () => {
     window.open("/api/auth/discord", "_blank");
   };
@@ -87,7 +107,30 @@ export function DossierFormPage({
     setSubmitError(null);
 
     if (type === "staff") {
-      setSubmitted(true);
+      setSubmitting(true);
+      try {
+        const res = await fetch("/api/dossier/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ type, ...formData }),
+        });
+        let data: { error?: string } = {};
+        try {
+          data = (await res.json()) as { error?: string };
+        } catch {
+          /* ignore */
+        }
+        if (!res.ok) {
+          setSubmitError(data.error ?? "Erreur lors de l'envoi");
+          return;
+        }
+        setSubmitted(true);
+      } catch {
+        setSubmitError("Erreur réseau. Réessayez dans un instant.");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -137,6 +180,10 @@ export function DossierFormPage({
       : type === "illegal"
         ? [{ href: "/reglement-illegal", label: "Règlement illégal" }]
         : [];
+
+  if (type === "staff" && submitted) {
+    return <InterviewBooking variant="staff" showSuccessBanner />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">

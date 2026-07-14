@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 const DEFAULT_INTERVIEW_ADMIN_ROLE_IDS = ["1430996155415920703"];
+const DEFAULT_STAFF_MANAGER_ROLE_IDS = ["1519527026112073819"];
 
 export function getInterviewAdminRoleIds(): string[] {
   const fromEnv = (process.env.INTERVIEW_ADMIN_ROLE_ID ?? "")
@@ -12,8 +13,26 @@ export function getInterviewAdminRoleIds(): string[] {
 
 export const INTERVIEW_ADMIN_ROLE_ID = getInterviewAdminRoleIds()[0];
 
+export function getStaffManagerRoleIds(): string[] {
+  const fromEnv = (process.env.STAFF_MANAGER_ROLE_ID ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return [...new Set([...DEFAULT_STAFF_MANAGER_ROLE_IDS, ...fromEnv])];
+}
+
+export const STAFF_MANAGER_ROLE_ID = getStaffManagerRoleIds()[0];
+
 function getAdminDiscordIds(): string[] {
   const raw = process.env.INTERVIEW_ADMIN_DISCORD_IDS ?? "";
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+function getStaffManagerDiscordIds(): string[] {
+  const raw = process.env.STAFF_MANAGER_DISCORD_IDS ?? "";
   return raw
     .split(",")
     .map((id) => id.trim())
@@ -33,6 +52,29 @@ export function isDiscordInterviewStaff(
 ): boolean {
   if (getAdminDiscordIds().includes(userId)) return true;
   return memberHasAdminRole(memberRoles, getInterviewAdminRoleIds());
+}
+
+export function isDiscordStaffManager(
+  userId: string,
+  memberRoles: string[] = [],
+): boolean {
+  if (getStaffManagerDiscordIds().includes(userId)) return true;
+  return memberHasAdminRole(memberRoles, getStaffManagerRoleIds());
+}
+
+export function getInterviewPanelRoleIds(): string[] {
+  return [
+    ...new Set([...getInterviewAdminRoleIds(), ...getStaffManagerRoleIds()]),
+  ];
+}
+
+export function isDiscordInterviewPanelStaff(
+  userId: string,
+  memberRoles: string[] = [],
+): boolean {
+  if (getAdminDiscordIds().includes(userId)) return true;
+  if (getStaffManagerDiscordIds().includes(userId)) return true;
+  return memberHasAdminRole(memberRoles, getInterviewPanelRoleIds());
 }
 
 export interface AdminCheckResult {
@@ -129,6 +171,50 @@ async function checkRolesViaBot(
   };
 }
 
+export async function checkInterviewPanelAccess(
+  userId: string,
+  accessToken?: string | null,
+): Promise<AdminCheckResult> {
+  const panelRoleIds = getInterviewPanelRoleIds();
+  const guildId = process.env.DISCORD_GUILD_ID;
+
+  if (getAdminDiscordIds().includes(userId)) {
+    return { isAdmin: true };
+  }
+  if (getStaffManagerDiscordIds().includes(userId)) {
+    return { isAdmin: true };
+  }
+
+  if (accessToken && guildId) {
+    const oauthResult = await checkRolesViaUserOAuth(
+      accessToken,
+      guildId,
+      panelRoleIds,
+    );
+    if (oauthResult) return oauthResult;
+  }
+
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken || !guildId) {
+    return {
+      isAdmin: false,
+      reason:
+        "Bot Discord non configuré. Reconnectez-vous à Discord pour vérifier votre rôle.",
+      needsReauth: !accessToken,
+    };
+  }
+
+  try {
+    return await checkRolesViaBot(userId, guildId, botToken, panelRoleIds);
+  } catch (error) {
+    console.error("checkInterviewPanelAccess:", error);
+    return {
+      isAdmin: false,
+      reason: "Erreur lors de la vérification Discord.",
+    };
+  }
+}
+
 export async function checkInterviewAdmin(
   userId: string,
   accessToken?: string | null,
@@ -171,6 +257,19 @@ export async function checkInterviewAdmin(
   }
 }
 
+export async function checkInterviewPanelFromRequest(
+  request: NextRequest,
+): Promise<AdminCheckResult & { user: DiscordSessionUser | null }> {
+  const user = getDiscordUserFromRequest(request);
+  if (!user) {
+    return { isAdmin: false, user: null, reason: "Non authentifié" };
+  }
+
+  const accessToken = request.cookies.get("discord_access_token")?.value;
+  const result = await checkInterviewPanelAccess(user.id, accessToken);
+  return { ...result, user };
+}
+
 export async function checkInterviewAdminFromRequest(
   request: NextRequest,
 ): Promise<AdminCheckResult & { user: DiscordSessionUser | null }> {
@@ -180,7 +279,7 @@ export async function checkInterviewAdminFromRequest(
   }
 
   const accessToken = request.cookies.get("discord_access_token")?.value;
-  const result = await checkInterviewAdmin(user.id, accessToken);
+  const result = await checkInterviewPanelAccess(user.id, accessToken);
   return { ...result, user };
 }
 

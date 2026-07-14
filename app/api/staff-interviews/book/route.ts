@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDiscordUserFromRequest } from "@/lib/discord-staff";
-import { sendInterviewBookingWebhook } from "@/lib/interview-webhook";
 import { interviewService } from "@/lib/interviews";
-import { whitelistService } from "@/lib/supabase";
+import { sendStaffBookingWebhook } from "@/lib/staff-interview-webhook";
+import { staffDossierService } from "@/lib/staff-dossier";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const status = await whitelistService.checkStatus(user.id);
-  if (!status.hasPassed) {
+  const submitted = await staffDossierService.hasSubmitted(user.id);
+  if (!submitted) {
     return NextResponse.json(
-      { error: "Vous devez d'abord valider le quiz." },
+      { error: "Vous devez d'abord déposer votre dossier staff." },
       { status: 403 },
     );
   }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     user.id,
     user.username,
     slotId,
-    "whitelist",
+    "staff",
   );
 
   if (!result.booking) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   const startsAt =
     result.startsAt ?? result.booking.interview_slots?.starts_at;
   if (startsAt) {
-    await sendInterviewBookingWebhook({
+    await sendStaffBookingWebhook({
       bookingId: result.booking.id,
       user: {
         id: user.id,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       startsAt,
     });
   } else {
-    console.error("Webhook entretien ignoré : startsAt manquant.");
+    console.error("Webhook staff ignoré : startsAt manquant.");
   }
 
   return NextResponse.json({ booking: result.booking });

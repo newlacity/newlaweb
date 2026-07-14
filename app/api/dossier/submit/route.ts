@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DISCORD_EMBED_FIELD_VALUE_MAX } from "@/lib/dossier-limits";
+import { staffDossierService } from "@/lib/staff-dossier";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const DOSSIER_LEGAL_WEBHOOK_URL = process.env.DOSSIER_LEGAL_WEBHOOK_URL;
 const DOSSIER_ILLEGAL_WEBHOOK_URL = process.env.DOSSIER_ILLEGAL_WEBHOOK_URL;
+const DOSSIER_STAFF_WEBHOOK_URL =
+  process.env.DOSSIER_STAFF_WEBHOOK_URL ??
+  process.env.STAFF_BOOKING_WEBHOOK_URL ??
+  "https://discord.com/api/webhooks/1526341909885354074/CYAjj_vSrD5B-QDX5ad6isbGaxS5NaNrOXp4lSFyuVez7OGDdrXjwD_SFbaWGQG1Z5Ua";
 
-type DossierKind = "legal" | "illegal";
+type DossierKind = "legal" | "illegal" | "staff";
 
 /** Titre en blanc gras dans un bloc ansi (les noms de champs Discord ne peuvent pas être colorés). */
 function buildTitleBlock(questionTitle: string): string {
@@ -67,6 +72,14 @@ function buildFormFields(
     return rows.map(([question, raw]) => ({ question, raw }));
   }
 
+  if (kind === "staff") {
+    const rows: [string, unknown][] = [
+      ...common,
+      ["5. Pourquoi rejoindre le staff", body.details],
+    ];
+    return rows.map(([question, raw]) => ({ question, raw }));
+  }
+
   const rows: [string, unknown][] = [
     ...common,
     ["5. Projets illégaux à venir", body.projetsAVenir],
@@ -98,7 +111,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Record<string, unknown>;
     const kind = body.type;
 
-    if (kind !== "legal" && kind !== "illegal") {
+    if (kind !== "legal" && kind !== "illegal" && kind !== "staff") {
       return NextResponse.json(
         { error: "Type de dossier invalide" },
         { status: 400 },
@@ -108,7 +121,9 @@ export async function POST(request: NextRequest) {
     const webhookUrl =
       kind === "legal"
         ? DOSSIER_LEGAL_WEBHOOK_URL
-        : DOSSIER_ILLEGAL_WEBHOOK_URL;
+        : kind === "illegal"
+          ? DOSSIER_ILLEGAL_WEBHOOK_URL
+          : DOSSIER_STAFF_WEBHOOK_URL;
 
     if (!webhookUrl) {
       console.error("Webhook dossier non configuré pour:", kind);
@@ -127,7 +142,9 @@ export async function POST(request: NextRequest) {
     const embedTitle =
       kind === "legal"
         ? "Dépôts de dossier : Légal"
-        : "Dépôts de dossier : Illégal";
+        : kind === "illegal"
+          ? "Dépôts de dossier : Illégal"
+          : "Dépôts de dossier : Staff";
 
     const headerFields = [
       {
@@ -145,7 +162,7 @@ export async function POST(request: NextRequest) {
     const embed = {
       title: embedTitle,
       description: `**Date** ${submittedFr}`,
-      color: kind === "legal" ? 0x22c55e : 0xdc2626,
+      color: kind === "legal" ? 0x22c55e : kind === "illegal" ? 0xdc2626 : 0x006bff,
       fields: [
         ...headerFields,
         ...formRows.map((row) => ({
@@ -174,6 +191,20 @@ export async function POST(request: NextRequest) {
         { error: "Échec de l'envoi vers Discord" },
         { status: 502 },
       );
+    }
+
+    if (kind === "staff") {
+      const recorded = await staffDossierService.recordSubmission(
+        user.id,
+        user.username ?? "Joueur",
+        body,
+      );
+      if (!recorded.ok) {
+        return NextResponse.json(
+          { error: recorded.error ?? "Erreur lors de l'enregistrement." },
+          { status: 500 },
+        );
+      }
     }
 
     return NextResponse.json({ ok: true });

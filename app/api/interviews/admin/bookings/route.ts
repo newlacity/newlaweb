@@ -4,6 +4,9 @@ import {
 } from "@/lib/discord-staff";
 import { sendInterviewCancellationDm } from "@/lib/interview-cancellation-dm";
 import { sendInterviewRejectionDm } from "@/lib/interview-booking-dm";
+import {
+  sendStaffRejectionDm,
+} from "@/lib/staff-interview-booking-dm";
 import { interviewService } from "@/lib/interviews";
 
 export const dynamic = "force-dynamic";
@@ -53,14 +56,22 @@ export async function DELETE(request: NextRequest) {
   }
 
   const startsAt = result.booking?.interview_slots?.starts_at;
+  const bookingKind = existing.booking_kind ?? "whitelist";
   let dmSent = false;
   if (result.booking?.user_id && startsAt) {
     if (existing.status === "pending") {
-      dmSent = await sendInterviewRejectionDm({
-        userId: result.booking.user_id,
-        username: result.booking.username,
-        startsAt,
-      });
+      dmSent =
+        bookingKind === "staff"
+          ? await sendStaffRejectionDm({
+              userId: result.booking.user_id,
+              username: result.booking.username,
+              startsAt,
+            })
+          : await sendInterviewRejectionDm({
+              userId: result.booking.user_id,
+              username: result.booking.username,
+              startsAt,
+            });
     } else {
       dmSent = await sendInterviewCancellationDm({
         userId: result.booking.user_id,

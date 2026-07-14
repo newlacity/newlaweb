@@ -317,7 +317,7 @@ export default function PanelEntretiensPage() {
             </a>
           )}
           <p className="text-white/40 text-xs mt-4">
-            Panel staff : /panel/entretiens · Rôle requis : 1430996155415920703
+            Panel staff : /panel/entretiens · Rôles : recruteur WL ou gérant staff
           </p>
         </div>
       </div>

@@ -29,7 +29,39 @@ interface InterviewBookingProps {
   showSuccessBanner?: boolean;
   onLogout?: () => void;
   previewMode?: boolean;
+  variant?: "whitelist" | "staff";
 }
+
+const STAFF_COPY = {
+  pendingTitle: "Demande envoyée !",
+  confirmedTitle: "Vous êtes inscrit !",
+  pendingSubtitle:
+    "Votre demande d'entretien staff est en attente de validation par l'équipe.",
+  confirmedSubtitle:
+    "Votre entretien de candidature staff est confirmé.",
+  pendingInfo:
+    "Vous recevrez un message Discord dès que votre créneau sera accepté ou refusé par un gérant staff.",
+  confirmedInfo:
+    "Rejoignez le salon vocal Discord à l'heure indiquée. Un gérant staff vous attendra pour votre entretien.",
+  calendarTitle: "Planifier votre entretien staff",
+  calendarSubtitle:
+    "Choisissez un créneau pour votre entretien de recrutement staff.",
+};
+
+const WHITELIST_COPY = {
+  pendingTitle: "Demande envoyée !",
+  confirmedTitle: "Vous êtes inscrit !",
+  pendingSubtitle:
+    "Votre demande d'entretien est en attente de validation par le staff.",
+  confirmedSubtitle: "Votre entretien oral background est confirmé.",
+  pendingInfo:
+    "Vous recevrez un message Discord dès que votre créneau sera accepté ou refusé par l'équipe.",
+  confirmedInfo:
+    "Rejoignez le salon vocal Discord à l'heure indiquée. Un membre du staff vous attendra pour votre entretien.",
+  calendarTitle: "Planifier votre entretien oral",
+  calendarSubtitle:
+    "Choisissez un créneau pour votre entretien de whitelist.",
+};
 
 const ACCENT = "#006BFF";
 
@@ -96,7 +128,11 @@ export function InterviewBooking({
   showSuccessBanner = false,
   onLogout,
   previewMode = false,
+  variant = "whitelist",
 }: InterviewBookingProps) {
+  const copy = variant === "staff" ? STAFF_COPY : WHITELIST_COPY;
+  const apiBase =
+    variant === "staff" ? "/api/staff-interviews" : "/api/interviews";
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<InterviewBooking | null>(null);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
@@ -126,7 +162,7 @@ export function InterviewBooking({
         }
 
         const [bookingRes, datesRes] = await Promise.all([
-          fetchWithTimeout("/api/interviews/my-booking"),
+          fetchWithTimeout(`${apiBase}/my-booking`),
           fetchWithTimeout("/api/interviews/slots"),
         ]);
 
@@ -157,7 +193,7 @@ export function InterviewBooking({
     return () => {
       cancelled = true;
     };
-  }, [previewMode]);
+  }, [previewMode, apiBase]);
 
   useEffect(() => {
     if (!selectedDate) {
@@ -193,7 +229,7 @@ export function InterviewBooking({
         }
         return;
       }
-      const res = await fetch("/api/interviews/book", {
+      const res = await fetch(`${apiBase}/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slotId: selectedSlotId }),
@@ -234,12 +270,10 @@ export function InterviewBooking({
               <CalendarCheck className="w-7 h-7" style={{ color: ACCENT }} />
             </div>
             <h2 className="text-xl font-bold text-white mb-1">
-              {isPending ? "Demande envoyée !" : "Vous êtes inscrit !"}
+              {isPending ? copy.pendingTitle : copy.confirmedTitle}
             </h2>
             <p className="text-white/50 text-sm">
-              {isPending
-                ? "Votre demande d'entretien est en attente de validation par le staff."
-                : "Votre entretien oral background est confirmé."}
+              {isPending ? copy.pendingSubtitle : copy.confirmedSubtitle}
             </p>
           </div>
           <div className="px-8 py-6 space-y-4">
@@ -256,9 +290,7 @@ export function InterviewBooking({
               </p>
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
-              {isPending
-                ? "Vous recevrez un message Discord dès que votre créneau sera accepté ou refusé par l'équipe."
-                : "Rejoignez le salon vocal Discord à l'heure indiquée. Un membre du staff vous attendra pour votre entretien."}
+              {isPending ? copy.pendingInfo : copy.confirmedInfo}
             </p>
             {!isPending && (
               <button
@@ -287,11 +319,20 @@ export function InterviewBooking({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 flex flex-col items-center px-4 py-8">
-      {showSuccessBanner && (
+      {showSuccessBanner && variant === "whitelist" && (
         <div className="w-full max-w-7xl mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-center">
           <p className="text-green-400 text-sm">
             Quiz validé ! Le rôle « Quizz validé » a été ajouté. Choisissez votre
             créneau ci-dessous.
+          </p>
+        </div>
+      )}
+
+      {showSuccessBanner && variant === "staff" && (
+        <div className="w-full max-w-7xl mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-center">
+          <p className="text-green-400 text-sm">
+            Dossier staff envoyé ! Choisissez votre créneau d&apos;entretien
+            ci-dessous.
           </p>
         </div>
       )}
@@ -310,9 +351,11 @@ export function InterviewBooking({
           <div className="p-10 border-b lg:border-b-0 lg:border-r border-white/10">
             <BrandLogo />
 
-            <p className="text-white/40 text-sm mb-1">Staff NEW LA</p>
+            <p className="text-white/40 text-sm mb-1">
+              {variant === "staff" ? "Recrutement NEW LA" : "Staff NEW LA"}
+            </p>
             <h1 className="text-2xl font-bold text-white mb-6 leading-tight">
-              Entretien oral — Background
+              {copy.calendarTitle}
             </h1>
 
             <ul className="space-y-3 mb-8">
@@ -327,8 +370,9 @@ export function InterviewBooking({
             </ul>
 
             <p className="text-white/40 text-sm leading-relaxed mb-4">
-              Entretien individuel avec un membre du staff pour valider votre
-              background RP et finaliser votre accès au serveur.
+              {variant === "staff"
+                ? "Entretien individuel avec un gérant staff pour discuter de votre candidature, votre expérience en modération et vos disponibilités."
+                : "Entretien individuel avec un membre du staff pour valider votre background RP et finaliser votre accès au serveur."}
             </p>
             <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-xs text-white/40 space-y-1">
               <p>Semaine : 20h → 0h30</p>

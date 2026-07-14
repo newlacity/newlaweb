@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyDiscordRequest } from "@/lib/discord-verify";
 import {
   isDiscordInterviewStaff,
+  isDiscordLegalManager,
   isDiscordStaffManager,
 } from "@/lib/discord-staff";
 import {
@@ -13,6 +14,15 @@ import {
   INTERVIEW_ACCEPT_PREFIX,
   INTERVIEW_REJECT_PREFIX,
 } from "@/lib/interview-webhook";
+import {
+  sendLegalAcceptanceDm,
+  sendLegalRejectionDm,
+} from "@/lib/legal-interview-booking-dm";
+import {
+  buildLegalRequestEmbed,
+  LEGAL_ACCEPT_PREFIX,
+  LEGAL_REJECT_PREFIX,
+} from "@/lib/legal-interview-webhook";
 import {
   sendStaffAcceptanceDm,
   sendStaffRejectionDm,
@@ -87,6 +97,20 @@ function parseBookingId(customId: string): {
       bookingId: customId.slice(STAFF_REJECT_PREFIX.length),
     };
   }
+  if (customId.startsWith(LEGAL_ACCEPT_PREFIX)) {
+    return {
+      kind: "legal",
+      action: "accept",
+      bookingId: customId.slice(LEGAL_ACCEPT_PREFIX.length),
+    };
+  }
+  if (customId.startsWith(LEGAL_REJECT_PREFIX)) {
+    return {
+      kind: "legal",
+      action: "reject",
+      bookingId: customId.slice(LEGAL_REJECT_PREFIX.length),
+    };
+  }
   return null;
 }
 
@@ -118,6 +142,9 @@ function buildEmbedForKind(
 ) {
   if (kind === "staff") {
     return buildStaffRequestEmbed(params);
+  }
+  if (kind === "legal") {
+    return buildLegalRequestEmbed(params);
   }
   return buildInterviewRequestEmbed(params);
 }
@@ -169,7 +196,9 @@ export async function POST(request: NextRequest) {
   const hasPermission =
     parsed.kind === "staff"
       ? isDiscordStaffManager(staffUser.id, staffRoles)
-      : isDiscordInterviewStaff(staffUser.id, staffRoles);
+      : parsed.kind === "legal"
+        ? isDiscordLegalManager(staffUser.id, staffRoles)
+        : isDiscordInterviewStaff(staffUser.id, staffRoles);
 
   if (!hasPermission) {
     return ephemeral("Vous n'avez pas la permission de traiter cette demande.");
@@ -216,11 +245,17 @@ export async function POST(request: NextRequest) {
             username: booking.username,
             startsAt,
           })
-        : await sendInterviewAcceptanceDm({
-            userId: booking.user_id,
-            username: booking.username,
-            startsAt,
-          });
+        : parsed.kind === "legal"
+          ? await sendLegalAcceptanceDm({
+              userId: booking.user_id,
+              username: booking.username,
+              startsAt,
+            })
+          : await sendInterviewAcceptanceDm({
+              userId: booking.user_id,
+              username: booking.username,
+              startsAt,
+            });
 
     if (!dmSent) {
       console.error(
@@ -257,11 +292,17 @@ export async function POST(request: NextRequest) {
           username: booking.username,
           startsAt,
         })
-      : await sendInterviewRejectionDm({
-          userId: booking.user_id,
-          username: booking.username,
-          startsAt,
-        });
+      : parsed.kind === "legal"
+        ? await sendLegalRejectionDm({
+            userId: booking.user_id,
+            username: booking.username,
+            startsAt,
+          })
+        : await sendInterviewRejectionDm({
+            userId: booking.user_id,
+            username: booking.username,
+            startsAt,
+          });
 
   if (!dmSent) {
     console.error(

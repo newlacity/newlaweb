@@ -26,3 +26,14 @@ CREATE TABLE IF NOT EXISTS staff_dossier_submissions (
 
 CREATE INDEX IF NOT EXISTS idx_staff_dossier_submissions_user_id
   ON staff_dossier_submissions(user_id);
+
+ALTER TABLE staff_dossier_submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to staff_dossier_submissions"
+  ON staff_dossier_submissions FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access to staff_dossier_submissions"
+  ON staff_dossier_submissions FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update access to staff_dossier_submissions"
+  ON staff_dossier_submissions FOR UPDATE USING (true);

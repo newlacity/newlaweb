@@ -11,6 +11,19 @@ import {
 
 type DossierType = "legal" | "illegal" | "staff";
 
+const INTERVIEW_DOSSIER_TYPES = ["staff", "legal"] as const;
+type InterviewDossierType = (typeof INTERVIEW_DOSSIER_TYPES)[number];
+
+function isInterviewDossierType(type: DossierType): type is InterviewDossierType {
+  return INTERVIEW_DOSSIER_TYPES.includes(type as InterviewDossierType);
+}
+
+function getDossierStatusApi(type: InterviewDossierType): string {
+  return type === "staff"
+    ? "/api/staff-interviews/dossier-status"
+    : "/api/legal-interviews/dossier-status";
+}
+
 interface DossierFormPageProps {
   type: DossierType;
   title: string;
@@ -73,11 +86,11 @@ export function DossierFormPage({
   }, []);
 
   useEffect(() => {
-    if (type !== "staff" || !isLoggedIn) return;
+    if (!isInterviewDossierType(type) || !isLoggedIn) return;
 
     const checkDossier = async () => {
       try {
-        const res = await fetch("/api/staff-interviews/dossier-status", {
+        const res = await fetch(getDossierStatusApi(type), {
           credentials: "include",
         });
         if (res.ok) {
@@ -85,7 +98,7 @@ export function DossierFormPage({
           if (data.submitted) setSubmitted(true);
         }
       } catch (error) {
-        console.error("Erreur dossier staff:", error);
+        console.error(`Erreur dossier ${type}:`, error);
       }
     };
     checkDossier();
@@ -106,7 +119,7 @@ export function DossierFormPage({
     e.preventDefault();
     setSubmitError(null);
 
-    if (type === "staff") {
+    if (isInterviewDossierType(type)) {
       setSubmitting(true);
       try {
         const res = await fetch("/api/dossier/submit", {
@@ -181,8 +194,8 @@ export function DossierFormPage({
         ? [{ href: "/reglement-illegal", label: "Règlement illégal" }]
         : [];
 
-  if (type === "staff" && submitted) {
-    return <InterviewBooking variant="staff" showSuccessBanner />;
+  if (isInterviewDossierType(type) && submitted) {
+    return <InterviewBooking variant={type} showSuccessBanner />;
   }
 
   return (

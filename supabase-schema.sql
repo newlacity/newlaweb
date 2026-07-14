@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS interview_bookings (
   user_id TEXT NOT NULL,
   username TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'rejected')),
-  booking_kind TEXT NOT NULL DEFAULT 'whitelist' CHECK (booking_kind IN ('whitelist', 'staff')),
+  booking_kind TEXT NOT NULL DEFAULT 'whitelist' CHECK (booking_kind IN ('whitelist', 'staff', 'legal')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -230,6 +230,25 @@ CREATE POLICY "Allow public read access to staff_dossier_submissions" ON staff_d
 CREATE POLICY "Allow public insert access to staff_dossier_submissions" ON staff_dossier_submissions
   FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update access to staff_dossier_submissions" ON staff_dossier_submissions
+  FOR UPDATE USING (true);
+
+CREATE TABLE IF NOT EXISTS legal_dossier_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  form_data JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_legal_dossier_submissions_user_id
+  ON legal_dossier_submissions(user_id);
+
+ALTER TABLE legal_dossier_submissions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to legal_dossier_submissions" ON legal_dossier_submissions
+  FOR SELECT USING (true);
+CREATE POLICY "Allow public insert access to legal_dossier_submissions" ON legal_dossier_submissions
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update access to legal_dossier_submissions" ON legal_dossier_submissions
   FOR UPDATE USING (true);
 
 CREATE TRIGGER update_interview_slots_updated_at

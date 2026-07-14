@@ -5,6 +5,9 @@ import {
 import { sendInterviewCancellationDm } from "@/lib/interview-cancellation-dm";
 import { sendInterviewRejectionDm } from "@/lib/interview-booking-dm";
 import {
+  sendLegalRejectionDm,
+} from "@/lib/legal-interview-booking-dm";
+import {
   sendStaffRejectionDm,
 } from "@/lib/staff-interview-booking-dm";
 import { interviewService } from "@/lib/interviews";
@@ -67,11 +70,17 @@ export async function DELETE(request: NextRequest) {
               username: result.booking.username,
               startsAt,
             })
-          : await sendInterviewRejectionDm({
-              userId: result.booking.user_id,
-              username: result.booking.username,
-              startsAt,
-            });
+          : bookingKind === "legal"
+            ? await sendLegalRejectionDm({
+                userId: result.booking.user_id,
+                username: result.booking.username,
+                startsAt,
+              })
+            : await sendInterviewRejectionDm({
+                userId: result.booking.user_id,
+                username: result.booking.username,
+                startsAt,
+              });
     } else {
       dmSent = await sendInterviewCancellationDm({
         userId: result.booking.user_id,

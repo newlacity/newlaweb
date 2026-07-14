@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DISCORD_EMBED_FIELD_VALUE_MAX } from "@/lib/dossier-limits";
+import { legalDossierService } from "@/lib/legal-dossier";
 import { staffDossierService } from "@/lib/staff-dossier";
 
 export const dynamic = "force-dynamic";
@@ -195,6 +196,20 @@ export async function POST(request: NextRequest) {
 
     if (kind === "staff") {
       const recorded = await staffDossierService.recordSubmission(
+        user.id,
+        user.username ?? "Joueur",
+        body,
+      );
+      if (!recorded.ok) {
+        return NextResponse.json(
+          { error: recorded.error ?? "Erreur lors de l'enregistrement." },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (kind === "legal") {
+      const recorded = await legalDossierService.recordSubmission(
         user.id,
         user.username ?? "Joueur",
         body,

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 const DEFAULT_INTERVIEW_ADMIN_ROLE_IDS = ["1430996155415920703"];
 const DEFAULT_STAFF_MANAGER_ROLE_IDS = ["1519527026112073819"];
+const DEFAULT_LEGAL_MANAGER_ROLE_IDS = ["1425942819755004004"];
 
 export function getInterviewAdminRoleIds(): string[] {
   const fromEnv = (process.env.INTERVIEW_ADMIN_ROLE_ID ?? "")
@@ -23,6 +24,16 @@ export function getStaffManagerRoleIds(): string[] {
 
 export const STAFF_MANAGER_ROLE_ID = getStaffManagerRoleIds()[0];
 
+export function getLegalManagerRoleIds(): string[] {
+  const fromEnv = (process.env.LEGAL_MANAGER_ROLE_ID ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return [...new Set([...DEFAULT_LEGAL_MANAGER_ROLE_IDS, ...fromEnv])];
+}
+
+export const LEGAL_MANAGER_ROLE_ID = getLegalManagerRoleIds()[0];
+
 function getAdminDiscordIds(): string[] {
   const raw = process.env.INTERVIEW_ADMIN_DISCORD_IDS ?? "";
   return raw
@@ -33,6 +44,14 @@ function getAdminDiscordIds(): string[] {
 
 function getStaffManagerDiscordIds(): string[] {
   const raw = process.env.STAFF_MANAGER_DISCORD_IDS ?? "";
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+function getLegalManagerDiscordIds(): string[] {
+  const raw = process.env.LEGAL_MANAGER_DISCORD_IDS ?? "";
   return raw
     .split(",")
     .map((id) => id.trim())
@@ -62,9 +81,21 @@ export function isDiscordStaffManager(
   return memberHasAdminRole(memberRoles, getStaffManagerRoleIds());
 }
 
+export function isDiscordLegalManager(
+  userId: string,
+  memberRoles: string[] = [],
+): boolean {
+  if (getLegalManagerDiscordIds().includes(userId)) return true;
+  return memberHasAdminRole(memberRoles, getLegalManagerRoleIds());
+}
+
 export function getInterviewPanelRoleIds(): string[] {
   return [
-    ...new Set([...getInterviewAdminRoleIds(), ...getStaffManagerRoleIds()]),
+    ...new Set([
+      ...getInterviewAdminRoleIds(),
+      ...getStaffManagerRoleIds(),
+      ...getLegalManagerRoleIds(),
+    ]),
   ];
 }
 
@@ -74,6 +105,7 @@ export function isDiscordInterviewPanelStaff(
 ): boolean {
   if (getAdminDiscordIds().includes(userId)) return true;
   if (getStaffManagerDiscordIds().includes(userId)) return true;
+  if (getLegalManagerDiscordIds().includes(userId)) return true;
   return memberHasAdminRole(memberRoles, getInterviewPanelRoleIds());
 }
 
@@ -182,6 +214,9 @@ export async function checkInterviewPanelAccess(
     return { isAdmin: true };
   }
   if (getStaffManagerDiscordIds().includes(userId)) {
+    return { isAdmin: true };
+  }
+  if (getLegalManagerDiscordIds().includes(userId)) {
     return { isAdmin: true };
   }
 

@@ -26,7 +26,7 @@ export type InterviewBookingStatus =
   | "cancelled"
   | "rejected";
 
-export type InterviewBookingKind = "whitelist" | "staff";
+export type InterviewBookingKind = "whitelist" | "staff" | "legal";
 
 export interface InterviewBooking {
   id: string;

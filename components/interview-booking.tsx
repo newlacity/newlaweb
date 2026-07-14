@@ -29,8 +29,28 @@ interface InterviewBookingProps {
   showSuccessBanner?: boolean;
   onLogout?: () => void;
   previewMode?: boolean;
-  variant?: "whitelist" | "staff";
+  variant?: "whitelist" | "staff" | "legal";
 }
+
+const LEGAL_COPY = {
+  pendingTitle: "Demande envoyée !",
+  confirmedTitle: "Vous êtes inscrit !",
+  pendingSubtitle:
+    "Votre demande d'entretien dossier légal est en attente de validation.",
+  confirmedSubtitle: "Votre entretien dossier légal est confirmé.",
+  pendingInfo:
+    "Vous recevrez un message Discord dès que votre créneau sera accepté ou refusé par l'équipe légale.",
+  confirmedInfo:
+    "Rejoignez le salon vocal Discord à l'heure indiquée. Un responsable légal vous attendra pour votre entretien.",
+  calendarTitle: "Planifier votre entretien dossier légal",
+  calendarSubtitle:
+    "Choisissez un créneau pour présenter votre projet de société / activité légale.",
+  successBanner:
+    "Dossier légal envoyé ! Choisissez votre créneau d'entretien ci-dessous.",
+  brandLabel: "Dossier légal NEW LA",
+  description:
+    "Entretien individuel avec un responsable légal pour valider votre structure RP, votre business plan et la cohérence avec le règlement sociétés.",
+};
 
 const STAFF_COPY = {
   pendingTitle: "Demande envoyée !",
@@ -46,6 +66,11 @@ const STAFF_COPY = {
   calendarTitle: "Planifier votre entretien staff",
   calendarSubtitle:
     "Choisissez un créneau pour votre entretien de recrutement staff.",
+  successBanner:
+    "Dossier staff envoyé ! Choisissez votre créneau d'entretien ci-dessous.",
+  brandLabel: "Recrutement NEW LA",
+  description:
+    "Entretien individuel avec un gérant staff pour discuter de votre candidature, votre expérience en modération et vos disponibilités.",
 };
 
 const WHITELIST_COPY = {
@@ -61,7 +86,24 @@ const WHITELIST_COPY = {
   calendarTitle: "Planifier votre entretien oral",
   calendarSubtitle:
     "Choisissez un créneau pour votre entretien de whitelist.",
+  successBanner:
+    "Quiz validé ! Le rôle « Quizz validé » a été ajouté. Choisissez votre créneau ci-dessous.",
+  brandLabel: "Staff NEW LA",
+  description:
+    "Entretien individuel avec un membre du staff pour valider votre background RP et finaliser votre accès au serveur.",
 };
+
+const VARIANT_COPY = {
+  whitelist: WHITELIST_COPY,
+  staff: STAFF_COPY,
+  legal: LEGAL_COPY,
+} as const;
+
+const VARIANT_API_BASE = {
+  whitelist: "/api/interviews",
+  staff: "/api/staff-interviews",
+  legal: "/api/legal-interviews",
+} as const;
 
 const ACCENT = "#006BFF";
 
@@ -130,9 +172,8 @@ export function InterviewBooking({
   previewMode = false,
   variant = "whitelist",
 }: InterviewBookingProps) {
-  const copy = variant === "staff" ? STAFF_COPY : WHITELIST_COPY;
-  const apiBase =
-    variant === "staff" ? "/api/staff-interviews" : "/api/interviews";
+  const copy = VARIANT_COPY[variant];
+  const apiBase = VARIANT_API_BASE[variant];
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<InterviewBooking | null>(null);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
@@ -319,21 +360,9 @@ export function InterviewBooking({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 flex flex-col items-center px-4 py-8">
-      {showSuccessBanner && variant === "whitelist" && (
+      {showSuccessBanner && copy.successBanner && (
         <div className="w-full max-w-7xl mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-center">
-          <p className="text-green-400 text-sm">
-            Quiz validé ! Le rôle « Quizz validé » a été ajouté. Choisissez votre
-            créneau ci-dessous.
-          </p>
-        </div>
-      )}
-
-      {showSuccessBanner && variant === "staff" && (
-        <div className="w-full max-w-7xl mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-center">
-          <p className="text-green-400 text-sm">
-            Dossier staff envoyé ! Choisissez votre créneau d&apos;entretien
-            ci-dessous.
-          </p>
+          <p className="text-green-400 text-sm">{copy.successBanner}</p>
         </div>
       )}
 
@@ -351,9 +380,7 @@ export function InterviewBooking({
           <div className="p-10 border-b lg:border-b-0 lg:border-r border-white/10">
             <BrandLogo />
 
-            <p className="text-white/40 text-sm mb-1">
-              {variant === "staff" ? "Recrutement NEW LA" : "Staff NEW LA"}
-            </p>
+            <p className="text-white/40 text-sm mb-1">{copy.brandLabel}</p>
             <h1 className="text-2xl font-bold text-white mb-6 leading-tight">
               {copy.calendarTitle}
             </h1>
@@ -370,9 +397,7 @@ export function InterviewBooking({
             </ul>
 
             <p className="text-white/40 text-sm leading-relaxed mb-4">
-              {variant === "staff"
-                ? "Entretien individuel avec un gérant staff pour discuter de votre candidature, votre expérience en modération et vos disponibilités."
-                : "Entretien individuel avec un membre du staff pour valider votre background RP et finaliser votre accès au serveur."}
+              {copy.description}
             </p>
             <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-xs text-white/40 space-y-1">
               <p>Semaine : 20h → 0h30</p>

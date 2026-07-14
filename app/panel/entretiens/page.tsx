@@ -317,7 +317,7 @@ export default function PanelEntretiensPage() {
             </a>
           )}
           <p className="text-white/40 text-xs mt-4">
-            Panel staff : /panel/entretiens · Rôles : recruteur WL ou gérant staff
+            Panel staff : /panel/entretiens · Rôles : recruteur WL, gérant staff ou responsable légal
           </p>
         </div>
       </div>
@@ -486,26 +486,31 @@ export default function PanelEntretiensPage() {
                       key={slot.id}
                       className="flex items-center justify-between gap-3 bg-white/5 rounded-lg px-4 py-3 min-w-0"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-white text-sm block">
                           {format(parseISO(slot.starts_at), "HH:mm")} — 30 min
+                          {slot.booking ? (
+                            <>
+                              <span className="text-white/40"> · </span>
+                              <span className="text-white font-medium">
+                                {slot.booking.username}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-white/40"> · Libre</span>
+                          )}
                         </span>
-                        {slot.booking ? (
+                        {slot.booking && (
                           <span
-                            className={`text-xs block truncate mt-0.5 ${
+                            className={`text-xs block mt-0.5 ${
                               slot.booking.status === "pending"
                                 ? "text-amber-400"
                                 : "text-green-400"
                             }`}
                           >
                             {slot.booking.status === "pending"
-                              ? "En attente"
-                              : "Confirmé"}{" "}
-                            · {slot.booking.username}
-                          </span>
-                        ) : (
-                          <span className="text-white/40 text-xs block mt-0.5">
-                            Libre
+                              ? "En attente de validation"
+                              : "Confirmé"}
                           </span>
                         )}
                       </div>

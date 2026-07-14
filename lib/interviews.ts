@@ -14,6 +14,7 @@ export { SLOT_DURATION_MINUTES };
 export interface InterviewSlot {
   id: string;
   starts_at: string;
+  slot_kind: InterviewSlotKind;
   is_active: boolean;
   created_by: string;
   created_at: string;
@@ -27,6 +28,7 @@ export type InterviewBookingStatus =
   | "rejected";
 
 export type InterviewBookingKind = "whitelist" | "staff" | "legal";
+export type InterviewSlotKind = InterviewBookingKind;
 
 export interface InterviewBooking {
   id: string;
@@ -46,7 +48,16 @@ const ACTIVE_BOOKING_STATUSES: InterviewBookingStatus[] = [
 ];
 
 export interface SlotWithBooking extends InterviewSlot {
-  booking: InterviewBooking | null;
+  booking: (InterviewBooking & { status?: string }) | null;
+}
+
+function isValidSlotKind(kind: string): kind is InterviewSlotKind {
+  return kind === "whitelist" || kind === "staff" || kind === "legal";
+}
+
+export function parseInterviewSlotKind(value: string | null | undefined): InterviewSlotKind {
+  if (value && isValidSlotKind(value)) return value;
+  return "whitelist";
 }
 
 function parseTimeToMinutes(time: string): number {
@@ -76,7 +87,10 @@ export function buildSlotTimestamps(
 }
 
 export const interviewService = {
-  async getAvailableSlotsForDate(date: string): Promise<InterviewSlot[]> {
+  async getAvailableSlotsForDate(
+    date: string,
+    kind: InterviewSlotKind = "whitelist",
+  ): Promise<InterviewSlot[]> {
     if (!isBookableCalendarDate(date)) return [];
 
     const supabase = getSupabase();
@@ -87,6 +101,7 @@ export const interviewService = {
       .from("interview_slots")
       .select("*")
       .eq("is_active", true)
+      .eq("slot_kind", kind)
       .gte("starts_at", dayStart)
       .lte("starts_at", dayEnd)
       .order("starts_at", { ascending: true });
@@ -99,6 +114,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
+      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
@@ -119,7 +135,9 @@ export const interviewService = {
     );
   },
 
-  async getDatesWithAvailability(): Promise<string[]> {
+  async getDatesWithAvailability(
+    kind: InterviewSlotKind = "whitelist",
+  ): Promise<string[]> {
     const supabase = getSupabase();
     const today = getTodayParisDateString();
 
@@ -127,6 +145,7 @@ export const interviewService = {
       .from("interview_slots")
       .select("id, starts_at")
       .eq("is_active", true)
+      .eq("slot_kind", kind)
       .gte("starts_at", `${today}T00:00:00`)
       .order("starts_at", { ascending: true });
 
@@ -135,6 +154,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("slot_id")
+      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
@@ -206,6 +226,13 @@ export const interviewService = {
       return { booking: null, error: "Créneau introuvable ou indisponible." };
     }
 
+    if (slot.slot_kind !== kind) {
+      return {
+        booking: null,
+        error: "Ce créneau n'est pas disponible pour ce type d'entretien.",
+      };
+    }
+
     if (!isBookableSlotStart(slot.starts_at)) {
       return {
         booking: null,
@@ -221,6 +248,7 @@ export const interviewService = {
       .from("interview_bookings")
       .select("id")
       .eq("slot_id", slotId)
+      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .maybeSingle();
 
@@ -256,6 +284,7 @@ export const interviewService = {
   async createSlots(
     createdBy: string,
     date: string,
+    kind: InterviewSlotKind = "whitelist",
     _startTime?: string,
     _endTime?: string,
   ): Promise<{
@@ -272,13 +301,14 @@ export const interviewService = {
     const supabase = getSupabase();
     const rows = timestamps.map((starts_at) => ({
       starts_at,
+      slot_kind: kind,
       is_active: true,
       created_by: createdBy,
     }));
 
     const { data, error } = await supabase
       .from("interview_slots")
-      .upsert(rows, { onConflict: "starts_at", ignoreDuplicates: true })
+      .upsert(rows, { onConflict: "starts_at,slot_kind", ignoreDuplicates: true })
       .select();
 
     if (error) {
@@ -291,6 +321,7 @@ export const interviewService = {
       const { count } = await supabase
         .from("interview_slots")
         .select("*", { count: "exact", head: true })
+        .eq("slot_kind", kind)
         .in("starts_at", timestamps);
 
       if (count && count > 0) {
@@ -304,6 +335,7 @@ export const interviewService = {
   async createSlotsForDates(
     createdBy: string,
     dates: string[],
+    kind: InterviewSlotKind = "whitelist",
   ): Promise<{
     created: number;
     datesProcessed: number;
@@ -315,7 +347,7 @@ export const interviewService = {
     let skippedDates = 0;
 
     for (const date of dates) {
-      const result = await this.createSlots(createdBy, date);
+      const result = await this.createSlots(createdBy, date, kind);
       if (result.error && !result.alreadyExists) {
         return {
           created,
@@ -335,11 +367,16 @@ export const interviewService = {
     return { created, datesProcessed, skippedDates };
   },
 
-  async getAdminSlots(from: string, to: string): Promise<SlotWithBooking[]> {
+  async getAdminSlots(
+    from: string,
+    to: string,
+    kind: InterviewSlotKind = "whitelist",
+  ): Promise<SlotWithBooking[]> {
     const supabase = getSupabase();
     const { data: slots, error } = await supabase
       .from("interview_slots")
       .select("*")
+      .eq("slot_kind", kind)
       .gte("starts_at", `${from}T00:00:00`)
       .lte("starts_at", `${to}T23:59:59`)
       .order("starts_at", { ascending: true });
@@ -349,6 +386,7 @@ export const interviewService = {
     const { data: bookings } = await supabase
       .from("interview_bookings")
       .select("*")
+      .eq("booking_kind", kind)
       .in("status", ACTIVE_BOOKING_STATUSES)
       .in(
         "slot_id",
@@ -371,8 +409,20 @@ export const interviewService = {
     );
   },
 
-  async deleteSlot(slotId: string): Promise<{ ok: boolean; error?: string }> {
+  async deleteSlot(
+    slotId: string,
+    kind?: InterviewSlotKind,
+  ): Promise<{ ok: boolean; error?: string }> {
     const supabase = getSupabase();
+
+    let slotQuery = supabase.from("interview_slots").select("id").eq("id", slotId);
+    if (kind) {
+      slotQuery = slotQuery.eq("slot_kind", kind);
+    }
+    const { data: slot } = await slotQuery.maybeSingle();
+    if (!slot) {
+      return { ok: false, error: "Créneau introuvable." };
+    }
 
     const { data: booking } = await supabase
       .from("interview_bookings")

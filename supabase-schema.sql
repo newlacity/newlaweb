@@ -183,12 +183,18 @@ CREATE POLICY "Allow public update access" ON whitelist_entries
 
 CREATE TABLE IF NOT EXISTS interview_slots (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  starts_at TIMESTAMPTZ NOT NULL UNIQUE,
+  starts_at TIMESTAMPTZ NOT NULL,
+  slot_kind TEXT NOT NULL DEFAULT 'whitelist' CHECK (slot_kind IN ('whitelist', 'staff', 'legal')),
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_by TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_slots_starts_at_kind
+  ON interview_slots(starts_at, slot_kind);
+
+CREATE INDEX IF NOT EXISTS idx_interview_slots_slot_kind ON interview_slots(slot_kind);
 
 CREATE TABLE IF NOT EXISTS interview_bookings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

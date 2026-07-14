@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   checkInterviewAdminFromRequest,
 } from "@/lib/discord-staff";
-import { interviewService } from "@/lib/interviews";
+import { interviewService, parseInterviewSlotKind } from "@/lib/interviews";
 import { getUpcomingBookableDates } from "@/lib/interview-schedule";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get("to") ??
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  const slots = await interviewService.getAdminSlots(from, to);
+  const kind = parseInterviewSlotKind(request.nextUrl.searchParams.get("kind"));
+
+  const slots = await interviewService.getAdminSlots(from, to, kind);
   return NextResponse.json({ slots });
 }
 
@@ -49,11 +51,13 @@ export async function POST(request: NextRequest) {
   if (auth.error) return auth.error;
 
   const body = await request.json();
-  const { date, dates, daysAhead } = body as {
+  const { date, dates, daysAhead, kind: rawKind } = body as {
     date?: string;
     dates?: string[];
     daysAhead?: number;
+    kind?: string;
   };
+  const kind = parseInterviewSlotKind(rawKind);
 
   if (daysAhead && daysAhead > 0) {
     const capped = Math.min(Math.floor(daysAhead), 60);
@@ -61,6 +65,7 @@ export async function POST(request: NextRequest) {
     const result = await interviewService.createSlotsForDates(
       auth.user!.id,
       targetDates,
+      kind,
     );
 
     if (result.error) {
@@ -83,6 +88,7 @@ export async function POST(request: NextRequest) {
     const result = await interviewService.createSlotsForDates(
       auth.user!.id,
       dates,
+      kind,
     );
 
     if (result.error) {
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await interviewService.createSlots(auth.user!.id, date);
+  const result = await interviewService.createSlots(auth.user!.id, date, kind);
 
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: 400 });
@@ -144,11 +150,12 @@ export async function DELETE(request: NextRequest) {
   if (auth.error) return auth.error;
 
   const slotId = request.nextUrl.searchParams.get("slotId");
+  const kind = parseInterviewSlotKind(request.nextUrl.searchParams.get("kind"));
   if (!slotId) {
     return NextResponse.json({ error: "slotId requis." }, { status: 400 });
   }
 
-  const result = await interviewService.deleteSlot(slotId);
+  const result = await interviewService.deleteSlot(slotId, kind);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

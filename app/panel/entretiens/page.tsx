@@ -55,10 +55,24 @@ interface BookingRow {
   username: string;
   user_id: string;
   status?: string;
+  booking_kind?: SlotPole;
   interview_slots?: { starts_at: string };
 }
 
 type Tab = "slots" | "bookings";
+type SlotPole = "whitelist" | "staff" | "legal";
+
+const POLE_OPTIONS: { id: SlotPole; label: string }[] = [
+  { id: "whitelist", label: "Recrutement WL" },
+  { id: "staff", label: "Staff" },
+  { id: "legal", label: "Légal" },
+];
+
+const POLE_LABELS: Record<SlotPole, string> = {
+  whitelist: "Recrutement WL",
+  staff: "Staff",
+  legal: "Légal",
+};
 
 function formatSlot(iso: string) {
   return format(parseISO(iso), "EEE d MMM yyyy · HH:mm", { locale: fr });
@@ -100,6 +114,7 @@ export default function PanelEntretiensPage() {
   const [adminReason, setAdminReason] = useState<string | null>(null);
   const [needsReauth, setNeedsReauth] = useState(false);
   const [tab, setTab] = useState<Tab>("slots");
+  const [selectedPole, setSelectedPole] = useState<SlotPole>("whitelist");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [slots, setSlots] = useState<SlotWithBooking[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -132,14 +147,14 @@ export default function PanelEntretiensPage() {
     setLoading(false);
   }, []);
 
-  const loadSlots = useCallback(async (date: Date) => {
+  const loadSlots = useCallback(async (date: Date, pole: SlotPole) => {
     const dateStr = format(date, "yyyy-MM-dd");
     if (isDevPreview) {
       setSlots(getPreviewAdminSlots(dateStr));
       return;
     }
     const res = await fetch(
-      `/api/interviews/admin/slots?from=${dateStr}&to=${dateStr}`,
+      `/api/interviews/admin/slots?from=${dateStr}&to=${dateStr}&kind=${pole}`,
     );
     if (res.ok) {
       const data = await res.json();
@@ -165,9 +180,9 @@ export default function PanelEntretiensPage() {
 
   useEffect(() => {
     if (isAdmin && tab === "slots") {
-      loadSlots(selectedDate);
+      loadSlots(selectedDate, selectedPole);
     }
-  }, [isAdmin, tab, selectedDate, loadSlots]);
+  }, [isAdmin, tab, selectedDate, selectedPole, loadSlots]);
 
   useEffect(() => {
     if (isAdmin && tab === "bookings") {
@@ -182,7 +197,7 @@ export default function PanelEntretiensPage() {
     try {
       if (isDevPreview) {
         setMessage("8 créneau(x) de 30 min ajouté(s) (aperçu localhost).");
-        loadSlots(selectedDate);
+        loadSlots(selectedDate, selectedPole);
         return;
       }
       const res = await fetch("/api/interviews/admin/slots", {
@@ -190,6 +205,7 @@ export default function PanelEntretiensPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: format(selectedDate, "yyyy-MM-dd"),
+          kind: selectedPole,
         }),
       });
       const data = await res.json();
@@ -202,7 +218,7 @@ export default function PanelEntretiensPage() {
       } else {
         setMessage(`${data.created} créneau(x) de 30 min ajouté(s).`);
       }
-      loadSlots(selectedDate);
+      loadSlots(selectedDate, selectedPole);
     } finally {
       setCreating(false);
     }
@@ -222,7 +238,7 @@ export default function PanelEntretiensPage() {
       const res = await fetch("/api/interviews/admin/slots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ daysAhead: bulkDays }),
+        body: JSON.stringify({ daysAhead: bulkDays, kind: selectedPole }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -230,7 +246,7 @@ export default function PanelEntretiensPage() {
         return;
       }
       setMessage(data.message ?? `${data.created} créneau(x) ajouté(s).`);
-      loadSlots(selectedDate);
+      loadSlots(selectedDate, selectedPole);
     } finally {
       setBulkCreating(false);
     }
@@ -242,7 +258,7 @@ export default function PanelEntretiensPage() {
       return;
     }
     const res = await fetch(
-      `/api/interviews/admin/slots?slotId=${slotId}`,
+      `/api/interviews/admin/slots?slotId=${slotId}&kind=${selectedPole}`,
       { method: "DELETE" },
     );
     const data = await res.json();
@@ -250,7 +266,7 @@ export default function PanelEntretiensPage() {
       setError(data.error ?? "Erreur");
       return;
     }
-    loadSlots(selectedDate);
+    loadSlots(selectedDate, selectedPole);
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -344,6 +360,23 @@ export default function PanelEntretiensPage() {
           </div>
         )}
 
+        <div className="flex flex-wrap gap-2 mb-4">
+          {POLE_OPTIONS.map((pole) => (
+            <button
+              key={pole.id}
+              type="button"
+              onClick={() => setSelectedPole(pole.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedPole === pole.id
+                  ? "bg-[#006BFF] text-white"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              {pole.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex gap-2 mb-8">
           <button
             onClick={() => setTab("slots")}
@@ -376,8 +409,8 @@ export default function PanelEntretiensPage() {
                 Ajouter des dates
               </h2>
               <p className="text-white/60 text-sm mb-4">
-                Génère les créneaux pour plusieurs jours d&apos;un coup (à partir
-                de demain). Sans ça, les joueurs ne voient qu&apos;une seule date.
+                Génère les créneaux <strong>{POLE_LABELS[selectedPole]}</strong>{" "}
+                pour plusieurs jours d&apos;un coup (à partir de demain).
               </p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {[7, 14, 21, 30].map((days) => (
@@ -401,7 +434,7 @@ export default function PanelEntretiensPage() {
                 className="w-full bg-[#006BFF] text-white py-3 rounded-lg font-semibold hover:bg-[#0052CC] disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {bulkCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-                Ajouter les créneaux pour {bulkDays} jours
+                Ajouter les créneaux {POLE_LABELS[selectedPole]} pour {bulkDays} jours
               </button>
               {message && (
                 <p className="text-green-400 text-sm mt-3">{message}</p>
@@ -474,7 +507,7 @@ export default function PanelEntretiensPage() {
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-6 lg:p-8">
               <h2 className="text-white font-medium mb-4">
-                Créneaux du{" "}
+                Créneaux {POLE_LABELS[selectedPole]} du{" "}
                 {format(selectedDate, "d MMMM yyyy", { locale: fr })}
               </h2>
               {slots.length === 0 ? (
@@ -536,11 +569,17 @@ export default function PanelEntretiensPage() {
             <h2 className="text-white font-medium mb-4">
               Toutes les réservations
             </h2>
-            {bookings.length === 0 ? (
-              <p className="text-white/50 text-sm">Aucune réservation.</p>
+            {bookings.filter(
+              (b) => (b.booking_kind ?? "whitelist") === selectedPole,
+            ).length === 0 ? (
+              <p className="text-white/50 text-sm">
+                Aucune réservation pour {POLE_LABELS[selectedPole]}.
+              </p>
             ) : (
               <div className="space-y-2">
-                {bookings.map((b) => (
+                {bookings
+                  .filter((b) => (b.booking_kind ?? "whitelist") === selectedPole)
+                  .map((b) => (
                   <div
                     key={b.id}
                     className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3"
@@ -554,6 +593,8 @@ export default function PanelEntretiensPage() {
                           ? formatSlot(b.interview_slots.starts_at)
                           : "—"}
                         {b.status === "pending" ? " · En attente" : ""}
+                        {" · "}
+                        {POLE_LABELS[b.booking_kind ?? "whitelist"]}
                       </p>
                       <p className="text-white/30 text-xs">ID: {b.user_id}</p>
                     </div>

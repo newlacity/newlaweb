@@ -204,7 +204,7 @@ export function InterviewBooking({
 
         const [bookingRes, datesRes] = await Promise.all([
           fetchWithTimeout(`${apiBase}/my-booking`),
-          fetchWithTimeout("/api/interviews/slots"),
+          fetchWithTimeout(`/api/interviews/slots?kind=${variant}`),
         ]);
 
         if (cancelled) return;
@@ -234,7 +234,7 @@ export function InterviewBooking({
     return () => {
       cancelled = true;
     };
-  }, [previewMode, apiBase]);
+  }, [previewMode, apiBase, variant]);
 
   useEffect(() => {
     if (!selectedDate) {
@@ -251,12 +251,12 @@ export function InterviewBooking({
       return;
     }
 
-    fetchWithTimeout(`/api/interviews/slots?date=${dateStr}`)
+    fetchWithTimeout(`/api/interviews/slots?date=${dateStr}&kind=${variant}`)
       .then((r) => (r?.ok ? r.json() : { slots: [] }))
       .then((data) => setSlots(data.slots ?? []))
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
-  }, [selectedDate, isPreview, previewMode]);
+  }, [selectedDate, isPreview, previewMode, variant]);
 
   const handleBook = async () => {
     if (!selectedSlotId) return;
